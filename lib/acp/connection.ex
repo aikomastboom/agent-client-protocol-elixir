@@ -322,9 +322,12 @@ defmodule ACP.Connection do
     json_map = Map.put(map, "jsonrpc", "2.0")
     line = Jason.encode!(json_map) <> "\n"
 
+    # Use IO.binwrite to emit raw UTF-8 bytes. IO.write routes through
+    # Erlang's unicode encoding layer which converts non-ASCII codepoints
+    # (e.g. em dash U+2014) to \x{NNNN} escapes — invalid JSON.
     case output do
-      :stdio -> IO.write(:stdio, line)
-      device -> IO.write(device, line)
+      :stdio -> IO.binwrite(:stdio, line)
+      device -> IO.binwrite(device, line)
     end
   end
 
