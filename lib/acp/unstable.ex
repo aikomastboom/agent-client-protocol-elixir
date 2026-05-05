@@ -292,6 +292,15 @@ defmodule ACP.SessionConfigOption do
   @enforce_keys [:id, :name, :kind]
   defstruct [:id, :name, :description, :category, :kind, :meta]
 
+  @type t :: %__MODULE__{
+          id: String.t(),
+          name: String.t(),
+          description: String.t() | nil,
+          category: term(),
+          kind: term(),
+          meta: map() | nil
+        }
+
   def new(id, name, kind), do: %__MODULE__{id: id, name: name, kind: kind}
 
   def select(id, name, current_value, options) do
@@ -781,6 +790,8 @@ defmodule ACP.ConfigOptionUpdate do
   @enforce_keys [:config_options]
   defstruct [:config_options, :meta]
 
+  @type t :: %__MODULE__{config_options: [ACP.SessionConfigOption.t()], meta: map() | nil}
+
   def new(config_options), do: %__MODULE__{config_options: config_options}
 
   def to_json(%__MODULE__{} = c) do
@@ -816,6 +827,12 @@ defmodule ACP.SessionInfoUpdate do
   """
 
   defstruct title: :undefined, updated_at: :undefined, meta: nil
+
+  @type t :: %__MODULE__{
+          title: :undefined | nil | {:value, String.t()},
+          updated_at: :undefined | nil | {:value, String.t()},
+          meta: map() | nil
+        }
 
   def new, do: %__MODULE__{}
 

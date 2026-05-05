@@ -9,6 +9,8 @@ defmodule ACP.ClientSideConnection do
 
   defstruct [:conn]
 
+  @type t :: %__MODULE__{conn: pid()}
+
   @doc """
   Start a client-side connection.
 

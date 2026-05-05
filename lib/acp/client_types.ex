@@ -174,6 +174,8 @@ defmodule ACP.CurrentModeUpdate do
   @enforce_keys [:current_mode_id]
   defstruct [:current_mode_id, :meta]
 
+  @type t :: %__MODULE__{current_mode_id: String.t(), meta: map() | nil}
+
   def new(current_mode_id), do: %__MODULE__{current_mode_id: current_mode_id}
 
   def to_json(%__MODULE__{} = c) do
@@ -201,6 +203,8 @@ defmodule ACP.AvailableCommandsUpdate do
 
   @enforce_keys [:available_commands]
   defstruct [:available_commands, :meta]
+
+  @type t :: %__MODULE__{available_commands: [ACP.AvailableCommand.t()], meta: map() | nil}
 
   def new(cmds), do: %__MODULE__{available_commands: cmds}
 
@@ -237,6 +241,13 @@ defmodule ACP.AvailableCommand do
 
   @enforce_keys [:name, :description]
   defstruct [:name, :description, :input, :meta]
+
+  @type t :: %__MODULE__{
+          name: String.t(),
+          description: String.t(),
+          input: ACP.AvailableCommandInput.t() | nil,
+          meta: map() | nil
+        }
 
   def new(name, description), do: %__MODULE__{name: name, description: description}
 
