@@ -87,6 +87,24 @@ defmodule ACP.SerializationTest do
     assert json == %{"sessionId" => "test-123"}
   end
 
+  test "close session request serialization" do
+    req = ACP.CloseSessionRequest.new("session-456")
+    json = ACP.CloseSessionRequest.to_json(req)
+    assert json == %{"sessionId" => "session-456"}
+
+    {:ok, decoded} = ACP.CloseSessionRequest.from_json(json)
+    assert decoded.session_id == "session-456"
+  end
+
+  test "close session response serialization" do
+    resp = ACP.CloseSessionResponse.new()
+    json = ACP.CloseSessionResponse.to_json(resp)
+    assert json == %{}
+
+    {:ok, decoded} = ACP.CloseSessionResponse.from_json(json)
+    assert decoded == %ACP.CloseSessionResponse{meta: nil}
+  end
+
   test "nil fields omitted from JSON" do
     impl = ACP.Implementation.new("test", "1.0")
     json = ACP.Implementation.to_json(impl)

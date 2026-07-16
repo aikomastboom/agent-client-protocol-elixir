@@ -25,6 +25,9 @@ defmodule ACP.Agent do
   @doc "Cancel ongoing operations for a session."
   @callback cancel(ACP.CancelNotification.t()) :: :ok | {:error, ACP.Error.t()}
 
+  @doc "Close a session and free resources. Optional."
+  @callback close_session(ACP.CloseSessionRequest.t()) :: result(ACP.CloseSessionResponse.t())
+
   @doc "Load an existing session. Optional - defaults to method_not_found error."
   @callback load_session(ACP.LoadSessionRequest.t()) :: result(ACP.LoadSessionResponse.t())
 
@@ -38,7 +41,13 @@ defmodule ACP.Agent do
   @doc "Handle extension notifications. Optional."
   @callback ext_notification(ACP.ExtNotification.t()) :: :ok | {:error, ACP.Error.t()}
 
-  @optional_callbacks [load_session: 1, set_session_mode: 1, ext_method: 1, ext_notification: 1]
+  @optional_callbacks [
+    load_session: 1,
+    set_session_mode: 1,
+    close_session: 1,
+    ext_method: 1,
+    ext_notification: 1
+  ]
 
   defmacro __using__(_opts) do
     quote do
@@ -51,12 +60,19 @@ defmodule ACP.Agent do
       def set_session_mode(_args), do: {:error, ACP.Error.method_not_found()}
 
       @impl ACP.Agent
+      def close_session(_args), do: {:error, ACP.Error.method_not_found()}
+
+      @impl ACP.Agent
       def ext_method(_args), do: {:ok, %ACP.ExtResponse{value: nil}}
 
       @impl ACP.Agent
       def ext_notification(_args), do: :ok
 
-      defoverridable load_session: 1, set_session_mode: 1, ext_method: 1, ext_notification: 1
+      defoverridable load_session: 1,
+                     set_session_mode: 1,
+                     close_session: 1,
+                     ext_method: 1,
+                     ext_notification: 1
     end
   end
 end

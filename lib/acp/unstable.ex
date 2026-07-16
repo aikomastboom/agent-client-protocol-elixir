@@ -782,6 +782,27 @@ defimpl Jason.Encoder, for: ACP.SessionResumeCapabilities do
     do: ACP.SessionResumeCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
+defmodule ACP.SessionCloseCapabilities do
+  @moduledoc "Capabilities for session/close."
+
+  defstruct [:meta]
+
+  def new, do: %__MODULE__{}
+
+  def to_json(%__MODULE__{} = c) do
+    if c.meta, do: %{"_meta" => c.meta}, else: %{}
+  end
+
+  def from_json(map) when is_map(map) do
+    {:ok, %__MODULE__{meta: Map.get(map, "_meta")}}
+  end
+end
+
+defimpl Jason.Encoder, for: ACP.SessionCloseCapabilities do
+  def encode(val, opts),
+    do: ACP.SessionCloseCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
 # --- Client-Side Unstable Types ---
 
 defmodule ACP.ConfigOptionUpdate do

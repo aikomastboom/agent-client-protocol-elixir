@@ -3,6 +3,7 @@ defmodule ACP.JSONHelpers do
 
   @doc "Convert an atom or string from snake_case to camelCase."
   def to_camel_case(key) when is_atom(key), do: to_camel_case(Atom.to_string(key))
+
   def to_camel_case(key) when is_binary(key) do
     case String.split(key, "_") do
       [first | rest] -> first <> Enum.map_join(rest, &String.capitalize/1)
@@ -21,6 +22,7 @@ defmodule ACP.JSONHelpers do
   @doc "Convert a map with snake_case atom keys to camelCase string keys, dropping nil values."
   def to_json_map(map, opts \\ []) when is_map(map) do
     rename = Keyword.get(opts, :rename, %{})
+
     map
     |> Enum.reject(fn {_k, v} -> is_nil(v) end)
     |> Enum.reject(fn {_k, v} -> v == [] and not Keyword.get(opts, :keep_empty_lists, false) end)

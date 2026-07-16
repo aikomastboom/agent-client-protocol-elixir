@@ -4,10 +4,10 @@ defmodule ACP.Error do
   alias ACP.JSONHelpers
 
   @type t :: %__MODULE__{
-    code: integer(),
-    message: String.t(),
-    data: any() | nil
-  }
+          code: integer(),
+          message: String.t(),
+          data: any() | nil
+        }
 
   @enforce_keys [:code, :message]
   defstruct [:code, :message, :data]
@@ -53,12 +53,14 @@ defmodule ACP.Error do
   end
 
   def from_json(%{"code" => code, "message" => message} = map) do
-    {:ok, %__MODULE__{
-      code: code,
-      message: message,
-      data: Map.get(map, "data")
-    }}
+    {:ok,
+     %__MODULE__{
+       code: code,
+       message: message,
+       data: Map.get(map, "data")
+     }}
   end
+
   def from_json(_), do: {:error, :invalid_error}
 end
 

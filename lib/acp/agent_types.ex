@@ -651,6 +651,46 @@ defimpl Jason.Encoder, for: ACP.CancelNotification do
   def encode(val, opts), do: ACP.CancelNotification.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
+# CloseSessionRequest
+defmodule ACP.CloseSessionRequest do
+  @enforce_keys [:session_id]
+  defstruct [:session_id, :meta]
+
+  def new(session_id), do: %__MODULE__{session_id: session_id}
+
+  def to_json(%__MODULE__{} = r) do
+    map = %{"sessionId" => r.session_id}
+    if r.meta, do: Map.put(map, "_meta", r.meta), else: map
+  end
+
+  def from_json(%{"sessionId" => sid} = map) do
+    {:ok, %__MODULE__{session_id: sid, meta: Map.get(map, "_meta")}}
+  end
+end
+
+defimpl Jason.Encoder, for: ACP.CloseSessionRequest do
+  def encode(val, opts), do: ACP.CloseSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
+# CloseSessionResponse
+defmodule ACP.CloseSessionResponse do
+  defstruct [:meta]
+
+  def new, do: %__MODULE__{}
+
+  def to_json(%__MODULE__{} = r) do
+    if r.meta, do: %{"_meta" => r.meta}, else: %{}
+  end
+
+  def from_json(map) when is_map(map) do
+    {:ok, %__MODULE__{meta: Map.get(map, "_meta")}}
+  end
+end
+
+defimpl Jason.Encoder, for: ACP.CloseSessionResponse do
+  def encode(val, opts), do: ACP.CloseSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
 # AgentCapabilities
 defmodule ACP.AgentCapabilities do
   defstruct load_session: false,
@@ -794,6 +834,7 @@ defmodule ACP.SessionCapabilities do
             list: nil,
             fork: nil,
             resume: nil,
+            close: nil,
             meta: nil
 
   def new, do: %__MODULE__{}
@@ -814,6 +855,11 @@ defmodule ACP.SessionCapabilities do
     map =
       if c.resume,
         do: Map.put(map, "resume", ACP.SessionResumeCapabilities.to_json(c.resume)),
+        else: map
+
+    map =
+      if c.close,
+        do: Map.put(map, "close", ACP.SessionCloseCapabilities.to_json(c.close)),
         else: map
 
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
@@ -848,6 +894,15 @@ defmodule ACP.SessionCapabilities do
 
            r ->
              {:ok, v} = ACP.SessionResumeCapabilities.from_json(r)
+             v
+         end,
+       close:
+         case Map.get(map, "close") do
+           nil ->
+             nil
+
+           c ->
+             {:ok, v} = ACP.SessionCloseCapabilities.from_json(c)
              v
          end,
        meta: Map.get(map, "_meta")

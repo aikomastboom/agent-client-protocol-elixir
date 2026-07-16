@@ -120,6 +120,23 @@ defmodule ACP.AgentTypesTest do
     assert caps.load_session == false
   end
 
+  test "SessionCapabilities with close capability" do
+    close_cap = ACP.SessionCloseCapabilities.new()
+    caps = %ACP.SessionCapabilities{close: close_cap}
+    json = ACP.SessionCapabilities.to_json(caps)
+    assert Map.has_key?(json, "close")
+    {:ok, decoded} = ACP.SessionCapabilities.from_json(json)
+    assert decoded.close != nil
+  end
+
+  test "SessionCapabilities without close capability" do
+    caps = ACP.SessionCapabilities.new()
+    json = ACP.SessionCapabilities.to_json(caps)
+    refute Map.has_key?(json, "close")
+    {:ok, decoded} = ACP.SessionCapabilities.from_json(json)
+    assert decoded.close == nil
+  end
+
   test "CancelNotification to_json/from_json" do
     notif = ACP.CancelNotification.new("session-1")
     json = ACP.CancelNotification.to_json(notif)

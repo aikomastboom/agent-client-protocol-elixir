@@ -88,7 +88,8 @@ defmodule ACP.AgentSide do
   @behaviour ACP.Side
 
   @impl true
-  def decode_request(_method, nil), do: {:error, invalid_params_with_reason("Missing request params")}
+  def decode_request(_method, nil),
+    do: {:error, invalid_params_with_reason("Missing request params")}
 
   def decode_request(method, params) do
     with :ok <- validate_required_fields(method, params) do
@@ -126,6 +127,9 @@ defmodule ACP.AgentSide do
         "session/set_model" ->
           ACP.SetSessionModelRequest.from_json(params) |> wrap(:set_session_model)
 
+        "session/close" ->
+          ACP.CloseSessionRequest.from_json(params) |> wrap(:close)
+
         "_" <> custom_method ->
           {:ok, {:ext_method, %ACP.ExtRequest{method: custom_method, params: params}}}
 
@@ -136,7 +140,8 @@ defmodule ACP.AgentSide do
   end
 
   @impl true
-  def decode_notification(_method, nil), do: {:error, invalid_params_with_reason("Missing request params")}
+  def decode_notification(_method, nil),
+    do: {:error, invalid_params_with_reason("Missing request params")}
 
   def decode_notification(method, params) do
     with :ok <- validate_required_fields(method, params) do
@@ -167,6 +172,7 @@ defmodule ACP.AgentSide do
         "session/fork" -> ["sessionId", "cwd"]
         "session/resume" -> ["sessionId", "cwd"]
         "session/cancel" -> ["sessionId"]
+        "session/close" -> ["sessionId"]
         _ -> []
       end
 

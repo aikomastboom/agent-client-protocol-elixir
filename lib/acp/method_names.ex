@@ -9,6 +9,7 @@ defmodule ACP.MethodNames do
   def session_set_mode, do: "session/set_mode"
   def session_prompt, do: "session/prompt"
   def session_cancel, do: "session/cancel"
+  def session_close, do: "session/close"
 
   # Unstable agent methods
   def session_fork, do: "session/fork"
@@ -38,6 +39,7 @@ defmodule ACP.MethodNames do
       session_set_mode(),
       session_prompt(),
       session_cancel(),
+      session_close(),
       session_fork(),
       session_resume(),
       session_list(),

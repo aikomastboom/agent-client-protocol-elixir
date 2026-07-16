@@ -41,6 +41,17 @@ defmodule ACP.SideTest do
       assert notif.session_id == "s1"
     end
 
+    test "decode_request session/close" do
+      params = %{"sessionId" => "s1"}
+      {:ok, {:close, req}} = ACP.AgentSide.decode_request("session/close", params)
+      assert req.session_id == "s1"
+    end
+
+    test "decode_request session/close missing sessionId" do
+      {:error, err} = ACP.AgentSide.decode_request("session/close", %{})
+      assert err.code == -32602
+    end
+
     test "decode_notification extension" do
       {:ok, {:ext_notification, ext}} = ACP.AgentSide.decode_notification("_custom", %{"x" => 1})
       assert ext.method == "custom"

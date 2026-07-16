@@ -8,9 +8,9 @@ defmodule ACP.ExtRequest do
   @moduledoc "Arbitrary request not part of the ACP spec."
 
   @type t :: %__MODULE__{
-    method: String.t(),
-    params: any()
-  }
+          method: String.t(),
+          params: any()
+        }
 
   @enforce_keys [:method, :params]
   defstruct [:method, :params]
@@ -22,8 +22,8 @@ defmodule ACP.ExtResponse do
   @moduledoc "Response to an ExtRequest."
 
   @type t :: %__MODULE__{
-    data: any()
-  }
+          data: any()
+        }
 
   defstruct [:data]
 
@@ -38,9 +38,9 @@ defmodule ACP.ExtNotification do
   @moduledoc "Arbitrary notification not part of the ACP spec."
 
   @type t :: %__MODULE__{
-    method: String.t(),
-    params: any()
-  }
+          method: String.t(),
+          params: any()
+        }
 
   @enforce_keys [:method, :params]
   defstruct [:method, :params]
