@@ -43,6 +43,22 @@ defmodule ACP.AgentSideConnection do
     )
   end
 
+  def elicit_form(%__MODULE__{} = c, req, timeout \\ 30_000) do
+    case ACP.Connection.request(
+           c.conn,
+           "elicitation/create",
+           ACP.ElicitationCreateRequest.to_json(req),
+           timeout
+         ) do
+      {:ok, resp_map} -> ACP.ElicitationCreateResponse.from_json(resp_map)
+      {:error, _} = err -> err
+    end
+  end
+
+  def elicit_url(%__MODULE__{} = c, req, timeout \\ 30_000) do
+    elicit_form(c, req, timeout)
+  end
+
   def write_text_file(%__MODULE__{} = c, req) do
     ACP.Connection.request(c.conn, "fs/write_text_file", ACP.WriteTextFileRequest.to_json(req))
   end

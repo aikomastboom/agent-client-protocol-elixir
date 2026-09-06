@@ -106,4 +106,68 @@ defmodule ACP.ClientTypesTest do
     {:ok, decoded} = ACP.AvailableCommand.from_json(json)
     assert decoded.description == "Commit changes"
   end
+
+  describe "ACP.ElicitationCapability" do
+    test "to_json/from_json round-trip with form and url" do
+      capability = %ACP.ElicitationCapability{
+        form: ACP.ElicitationFormCapability.new(),
+        url: ACP.ElicitationUrlCapability.new()
+      }
+
+      json = ACP.ElicitationCapability.to_json(capability)
+      assert json == %{"form" => %{}, "url" => %{}}
+
+      {:ok, decoded} = ACP.ElicitationCapability.from_json(json)
+      assert %ACP.ElicitationFormCapability{} = decoded.form
+      assert %ACP.ElicitationUrlCapability{} = decoded.url
+    end
+
+    test "to_json omits absent modes" do
+      capability = %ACP.ElicitationCapability{form: ACP.ElicitationFormCapability.new()}
+
+      assert ACP.ElicitationCapability.to_json(capability) == %{"form" => %{}}
+    end
+  end
+
+  describe "ACP.ClientCapabilities with elicitation" do
+    test "from_json without elicitation key returns nil" do
+      {:ok, caps} = ACP.ClientCapabilities.from_json(%{"terminal" => true})
+      assert caps.elicitation == nil
+    end
+
+    test "to_json includes elicitation when present" do
+      caps = %ACP.ClientCapabilities{
+        terminal: true,
+        elicitation: %ACP.ElicitationCapability{form: ACP.ElicitationFormCapability.new()}
+      }
+
+      assert ACP.ClientCapabilities.to_json(caps) == %{
+               "terminal" => true,
+               "elicitation" => %{"form" => %{}}
+             }
+    end
+  end
+
+  describe "ACP.ElicitationCreateResponse" do
+    test "from_json accept with content" do
+      {:ok, response} =
+        ACP.ElicitationCreateResponse.from_json(%{
+          "action" => "accept",
+          "content" => %{"foo" => "bar"}
+        })
+
+      assert response.action == :accept
+      assert response.content == %{"foo" => "bar"}
+    end
+
+    test "from_json decline" do
+      {:ok, response} = ACP.ElicitationCreateResponse.from_json(%{"action" => "decline"})
+      assert response.action == :decline
+    end
+
+    test "from_json cancel" do
+      {:ok, response} = ACP.ElicitationCreateResponse.from_json(%{"action" => "cancel"})
+      assert response.action == :cancel
+    end
+  end
 end

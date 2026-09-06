@@ -29,6 +29,9 @@ defmodule ACP.ClientSide do
       "session/request_permission" ->
         ACP.RequestPermissionRequest.from_json(params) |> wrap(:request_permission)
 
+      "elicitation/create" ->
+        ACP.ElicitationCreateRequest.from_json(params) |> wrap(:elicitation_create)
+
       "fs/write_text_file" ->
         ACP.WriteTextFileRequest.from_json(params) |> wrap(:write_text_file)
 

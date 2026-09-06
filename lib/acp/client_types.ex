@@ -919,6 +919,190 @@ defimpl Jason.Encoder, for: ACP.KillTerminalCommandResponse do
     do: ACP.KillTerminalCommandResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
+# --- Elicitation Capabilities ---
+
+defmodule ACP.ElicitationFormCapability do
+  @moduledoc "Form-mode elicitation capability supported by the client."
+
+  defstruct [:meta]
+
+  def new, do: %__MODULE__{}
+
+  def to_json(%__MODULE__{} = c) do
+    if c.meta, do: %{"_meta" => c.meta}, else: %{}
+  end
+
+  def from_json(map) when is_map(map) do
+    {:ok, %__MODULE__{meta: Map.get(map, "_meta")}}
+  end
+end
+
+defimpl Jason.Encoder, for: ACP.ElicitationFormCapability do
+  def encode(val, opts),
+    do: ACP.ElicitationFormCapability.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
+defmodule ACP.ElicitationUrlCapability do
+  @moduledoc "URL-mode elicitation capability supported by the client."
+
+  defstruct [:meta]
+
+  def new, do: %__MODULE__{}
+
+  def to_json(%__MODULE__{} = c) do
+    if c.meta, do: %{"_meta" => c.meta}, else: %{}
+  end
+
+  def from_json(map) when is_map(map) do
+    {:ok, %__MODULE__{meta: Map.get(map, "_meta")}}
+  end
+end
+
+defimpl Jason.Encoder, for: ACP.ElicitationUrlCapability do
+  def encode(val, opts),
+    do: ACP.ElicitationUrlCapability.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
+defmodule ACP.ElicitationCapability do
+  @moduledoc "Elicitation capabilities supported by the client."
+
+  defstruct form: nil,
+            url: nil,
+            meta: nil
+
+  def new, do: %__MODULE__{}
+
+  def to_json(%__MODULE__{} = c) do
+    map = %{}
+
+    map =
+      if c.form,
+        do: Map.put(map, "form", ACP.ElicitationFormCapability.to_json(c.form)),
+        else: map
+
+    map =
+      if c.url, do: Map.put(map, "url", ACP.ElicitationUrlCapability.to_json(c.url)), else: map
+
+    if c.meta, do: Map.put(map, "_meta", c.meta), else: map
+  end
+
+  def from_json(map) when is_map(map) do
+    {:ok,
+     %__MODULE__{
+       form:
+         case Map.get(map, "form") do
+           nil ->
+             nil
+
+           form ->
+             {:ok, value} = ACP.ElicitationFormCapability.from_json(form)
+             value
+         end,
+       url:
+         case Map.get(map, "url") do
+           nil ->
+             nil
+
+           url ->
+             {:ok, value} = ACP.ElicitationUrlCapability.from_json(url)
+             value
+         end,
+       meta: Map.get(map, "_meta")
+     }}
+  end
+end
+
+defimpl Jason.Encoder, for: ACP.ElicitationCapability do
+  def encode(val, opts), do: ACP.ElicitationCapability.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
+# --- Elicitation Create Request ---
+
+defmodule ACP.ElicitationCreateRequest do
+  @moduledoc "Request from the agent asking the client to elicit additional input."
+
+  @enforce_keys [:session_id, :mode, :message]
+  defstruct [
+    :session_id,
+    :tool_call_id,
+    :mode,
+    :message,
+    :requested_schema,
+    :elicitation_id,
+    :url,
+    :meta
+  ]
+
+  def to_json(%__MODULE__{} = r) do
+    map = %{"sessionId" => r.session_id, "mode" => r.mode, "message" => r.message}
+    map = if r.tool_call_id, do: Map.put(map, "toolCallId", r.tool_call_id), else: map
+
+    map =
+      if r.requested_schema, do: Map.put(map, "requestedSchema", r.requested_schema), else: map
+
+    map = if r.elicitation_id, do: Map.put(map, "elicitationId", r.elicitation_id), else: map
+    map = if r.url, do: Map.put(map, "url", r.url), else: map
+    if r.meta, do: Map.put(map, "_meta", r.meta), else: map
+  end
+
+  def from_json(%{"sessionId" => sid, "mode" => mode, "message" => message} = map) do
+    {:ok,
+     %__MODULE__{
+       session_id: sid,
+       tool_call_id: Map.get(map, "toolCallId"),
+       mode: mode,
+       message: message,
+       requested_schema: Map.get(map, "requestedSchema"),
+       elicitation_id: Map.get(map, "elicitationId"),
+       url: Map.get(map, "url"),
+       meta: Map.get(map, "_meta")
+     }}
+  end
+end
+
+defimpl Jason.Encoder, for: ACP.ElicitationCreateRequest do
+  def encode(val, opts),
+    do: ACP.ElicitationCreateRequest.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
+# --- Elicitation Create Response ---
+
+defmodule ACP.ElicitationCreateResponse do
+  @moduledoc "Response from the client to an elicitation/create request."
+
+  defstruct [:action, :content, :meta]
+
+  def to_json(%__MODULE__{} = r) do
+    map = %{"action" => action_to_json(r.action)}
+    map = if r.content, do: Map.put(map, "content", r.content), else: map
+    if r.meta, do: Map.put(map, "_meta", r.meta), else: map
+  end
+
+  def from_json(map) when is_map(map) do
+    {:ok,
+     %__MODULE__{
+       action: action_from_json(Map.get(map, "action")),
+       content: Map.get(map, "content"),
+       meta: Map.get(map, "_meta")
+     }}
+  end
+
+  defp action_to_json(:accept), do: "accept"
+  defp action_to_json(:decline), do: "decline"
+  defp action_to_json(:cancel), do: "cancel"
+  defp action_to_json({:unknown, action}), do: action
+
+  defp action_from_json("accept"), do: :accept
+  defp action_from_json("decline"), do: :decline
+  defp action_from_json("cancel"), do: :cancel
+  defp action_from_json(action), do: {:unknown, action}
+end
+
+defimpl Jason.Encoder, for: ACP.ElicitationCreateResponse do
+  def encode(val, opts),
+    do: ACP.ElicitationCreateResponse.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
 # --- Client Capabilities ---
 
 defmodule ACP.ClientCapabilities do
@@ -926,6 +1110,7 @@ defmodule ACP.ClientCapabilities do
 
   defstruct terminal: false,
             file_system: nil,
+            elicitation: nil,
             meta: nil
 
   def new, do: %__MODULE__{}
@@ -936,6 +1121,11 @@ defmodule ACP.ClientCapabilities do
     map =
       if c.file_system,
         do: Map.put(map, "fileSystem", ACP.FileSystemCapability.to_json(c.file_system)),
+        else: map
+
+    map =
+      if c.elicitation,
+        do: Map.put(map, "elicitation", ACP.ElicitationCapability.to_json(c.elicitation)),
         else: map
 
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
@@ -952,6 +1142,15 @@ defmodule ACP.ClientCapabilities do
 
            fs ->
              {:ok, v} = ACP.FileSystemCapability.from_json(fs)
+             v
+         end,
+       elicitation:
+         case Map.get(map, "elicitation") do
+           nil ->
+             nil
+
+           elicitation ->
+             {:ok, v} = ACP.ElicitationCapability.from_json(elicitation)
              v
          end,
        meta: Map.get(map, "_meta")
@@ -1002,6 +1201,7 @@ defmodule ACP.AgentRequest do
           {:write_text_file, ACP.WriteTextFileRequest.t()}
           | {:read_text_file, ACP.ReadTextFileRequest.t()}
           | {:request_permission, ACP.RequestPermissionRequest.t()}
+          | {:elicitation_create, ACP.ElicitationCreateRequest.t()}
           | {:create_terminal, ACP.CreateTerminalRequest.t()}
           | {:terminal_output, ACP.TerminalOutputRequest.t()}
           | {:release_terminal, ACP.ReleaseTerminalRequest.t()}
@@ -1012,6 +1212,7 @@ defmodule ACP.AgentRequest do
   def method({:write_text_file, _}), do: "fs/write_text_file"
   def method({:read_text_file, _}), do: "fs/read_text_file"
   def method({:request_permission, _}), do: "session/request_permission"
+  def method({:elicitation_create, _}), do: "elicitation/create"
   def method({:create_terminal, _}), do: "terminal/create"
   def method({:terminal_output, _}), do: "terminal/output"
   def method({:release_terminal, _}), do: "terminal/release"
@@ -1029,6 +1230,7 @@ defmodule ACP.ClientResponse do
           {:write_text_file, ACP.WriteTextFileResponse.t()}
           | {:read_text_file, ACP.ReadTextFileResponse.t()}
           | {:request_permission, ACP.RequestPermissionResponse.t()}
+          | {:elicitation_create, ACP.ElicitationCreateResponse.t()}
           | {:create_terminal, ACP.CreateTerminalResponse.t()}
           | {:terminal_output, ACP.TerminalOutputResponse.t()}
           | {:release_terminal, ACP.ReleaseTerminalResponse.t()}
