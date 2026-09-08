@@ -926,6 +926,8 @@ defmodule ACP.ElicitationFormCapability do
 
   defstruct [:meta]
 
+  @type t :: %__MODULE__{meta: map() | nil}
+
   def new, do: %__MODULE__{}
 
   def to_json(%__MODULE__{} = c) do
@@ -946,6 +948,8 @@ defmodule ACP.ElicitationUrlCapability do
   @moduledoc "URL-mode elicitation capability supported by the client."
 
   defstruct [:meta]
+
+  @type t :: %__MODULE__{meta: map() | nil}
 
   def new, do: %__MODULE__{}
 
@@ -969,6 +973,12 @@ defmodule ACP.ElicitationCapability do
   defstruct form: nil,
             url: nil,
             meta: nil
+
+  @type t :: %__MODULE__{
+          form: ACP.ElicitationFormCapability.t() | nil,
+          url: ACP.ElicitationUrlCapability.t() | nil,
+          meta: map() | nil
+        }
 
   def new, do: %__MODULE__{}
 
@@ -1033,6 +1043,17 @@ defmodule ACP.ElicitationCreateRequest do
     :meta
   ]
 
+  @type t :: %__MODULE__{
+          session_id: String.t(),
+          tool_call_id: String.t() | nil,
+          mode: String.t(),
+          message: String.t(),
+          requested_schema: map() | nil,
+          elicitation_id: String.t() | nil,
+          url: String.t() | nil,
+          meta: map() | nil
+        }
+
   def to_json(%__MODULE__{} = r) do
     map = %{"sessionId" => r.session_id, "mode" => r.mode, "message" => r.message}
     map = if r.tool_call_id, do: Map.put(map, "toolCallId", r.tool_call_id), else: map
@@ -1071,6 +1092,12 @@ defmodule ACP.ElicitationCreateResponse do
   @moduledoc "Response from the client to an elicitation/create request."
 
   defstruct [:action, :content, :meta]
+
+  @type t :: %__MODULE__{
+          action: :accept | :decline | :cancel | {:unknown, term()},
+          content: map() | nil,
+          meta: map() | nil
+        }
 
   def to_json(%__MODULE__{} = r) do
     map = %{"action" => action_to_json(r.action)}
@@ -1112,6 +1139,13 @@ defmodule ACP.ClientCapabilities do
             file_system: nil,
             elicitation: nil,
             meta: nil
+
+  @type t :: %__MODULE__{
+          terminal: boolean(),
+          file_system: ACP.FileSystemCapability.t() | nil,
+          elicitation: ACP.ElicitationCapability.t() | nil,
+          meta: map() | nil
+        }
 
   def new, do: %__MODULE__{}
 
@@ -1170,6 +1204,12 @@ defmodule ACP.FileSystemCapability do
   defstruct write_text_file: false,
             read_text_file: false,
             meta: nil
+
+  @type t :: %__MODULE__{
+          write_text_file: boolean(),
+          read_text_file: boolean(),
+          meta: map() | nil
+        }
 
   def new, do: %__MODULE__{}
 

@@ -162,6 +162,7 @@ defmodule ACP.Connection do
         line = String.trim_trailing(line, "\n")
 
         if line != "" do
+          Logger.debug("[ACP.Connection] Received line: #{line}")
           send(parent, {:incoming_line, line})
         end
 
@@ -170,7 +171,8 @@ defmodule ACP.Connection do
       :eof ->
         send(parent, {:input_closed})
 
-      {:error, _reason} ->
+      {:error, reason} ->
+        Logger.debug("[ACP.Connection] Received error: #{inspect(reason)}")
         send(parent, {:input_closed})
     end
   end
@@ -201,7 +203,7 @@ defmodule ACP.Connection do
         handle_decoded_message(msg, state)
 
       {:error, reason} ->
-        Logger.error("Failed to parse incoming JSON-RPC message: #{inspect(reason)}")
+        Logger.error("[ACP.Connection] Failed to parse incoming JSON-RPC message: #{inspect(reason)}")
         state
     end
   end
@@ -221,7 +223,7 @@ defmodule ACP.Connection do
         handle_incoming_notification(msg, state)
 
       true ->
-        Logger.error("Unrecognized JSON-RPC message: #{inspect(msg)}")
+        Logger.error("[ACP.Connection] Unrecognized JSON-RPC message: #{inspect(msg)}")
         state
     end
   end
@@ -270,7 +272,7 @@ defmodule ACP.Connection do
   defp handle_incoming_response(%{"id" => id} = msg, state) do
     case Map.pop(state.pending_responses, id) do
       {nil, _} ->
-        Logger.error("Received response for unknown request id: #{inspect(id)}")
+        Logger.error("[ACP.Connection] Received response for unknown request id: #{inspect(id)}")
         state
 
       {from, pending} ->
@@ -313,7 +315,7 @@ defmodule ACP.Connection do
         state
 
       {:error, error} ->
-        Logger.error("Failed to decode notification #{method}: #{inspect(error)}")
+        Logger.error("[ACP.Connection] Failed to decode notification #{method}: #{inspect(error)}")
         state
     end
   end
