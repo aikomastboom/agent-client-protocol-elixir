@@ -46,6 +46,7 @@ defmodule ACP.SessionUpdate do
           | {:current_mode_update, ACP.CurrentModeUpdate.t()}
           | {:config_option_update, ACP.ConfigOptionUpdate.t()}
           | {:session_info_update, ACP.SessionInfoUpdate.t()}
+          | {:usage_update, ACP.UsageUpdate.t()}
 
   def to_json({:user_message_chunk, chunk}) do
     ACP.ContentChunk.to_json(chunk) |> Map.put("sessionUpdate", "user_message_chunk")
@@ -86,6 +87,10 @@ defmodule ACP.SessionUpdate do
 
   def to_json({:session_info_update, siu}) do
     ACP.SessionInfoUpdate.to_json(siu) |> Map.put("sessionUpdate", "session_info_update")
+  end
+
+  def to_json({:usage_update, uu}) do
+    ACP.UsageUpdate.to_json(uu) |> Map.put("sessionUpdate", "usage_update")
   end
 
   def from_json(%{"sessionUpdate" => "user_message_chunk"} = map) do
@@ -136,6 +141,11 @@ defmodule ACP.SessionUpdate do
   def from_json(%{"sessionUpdate" => "session_info_update"} = map) do
     {:ok, siu} = ACP.SessionInfoUpdate.from_json(map)
     {:session_info_update, siu}
+  end
+
+  def from_json(%{"sessionUpdate" => "usage_update"} = map) do
+    {:ok, uu} = ACP.UsageUpdate.from_json(map)
+    {:usage_update, uu}
   end
 end
 
@@ -194,6 +204,70 @@ end
 
 defimpl Jason.Encoder, for: ACP.CurrentModeUpdate do
   def encode(val, opts), do: ACP.CurrentModeUpdate.to_json(val) |> Jason.Encoder.encode(opts)
+end
+
+# --- Usage Update ---
+
+defmodule ACP.UsageUpdate do
+  @moduledoc """
+  Update describing token usage for the current context.
+
+  `used` is the number of tokens currently in the context window and
+  `size` is the total context window size in tokens. Clients compute the
+  percentage themselves. `cost` is an optional `%{amount: number, currency: String.t()}`
+  map (ISO 4217 currency code).
+  """
+
+  @enforce_keys [:used, :size]
+  defstruct [:used, :size, :cost, :meta]
+
+  @type t :: %__MODULE__{
+          used: non_neg_integer(),
+          size: pos_integer(),
+          cost: %{amount: number(), currency: String.t()} | nil,
+          meta: map() | nil
+        }
+
+  def new(used, size), do: %__MODULE__{used: used, size: size}
+
+  def new(used, size, {amount, currency}) when is_number(amount) and is_binary(currency) do
+    %__MODULE__{used: used, size: size, cost: %{amount: amount, currency: currency}}
+  end
+
+  def to_json(%__MODULE__{} = u) do
+    map = %{"used" => u.used, "size" => u.size}
+
+    map =
+      case u.cost do
+        %{amount: amount, currency: currency} ->
+          Map.put(map, "cost", %{"amount" => amount, "currency" => currency})
+
+        _ ->
+          map
+      end
+
+    if u.meta, do: Map.put(map, "_meta", u.meta), else: map
+  end
+
+  def from_json(map) when is_map(map) do
+    cost =
+      case Map.get(map, "cost") do
+        %{"amount" => amount, "currency" => currency} -> %{amount: amount, currency: currency}
+        _ -> nil
+      end
+
+    {:ok,
+     %__MODULE__{
+       used: Map.fetch!(map, "used"),
+       size: Map.fetch!(map, "size"),
+       cost: cost,
+       meta: Map.get(map, "_meta")
+     }}
+  end
+end
+
+defimpl Jason.Encoder, for: ACP.UsageUpdate do
+  def encode(val, opts), do: ACP.UsageUpdate.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Available Commands Update ---
