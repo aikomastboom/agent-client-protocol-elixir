@@ -17,6 +17,7 @@ defmodule ACP.Connection do
     :input_port,
     :output_io,
     :pending_responses,
+    :request_handlers,
     :next_id,
     :subscribers
   ]
@@ -82,6 +83,7 @@ defmodule ACP.Connection do
       handler_state: handler_state,
       output_io: output,
       pending_responses: %{},
+      request_handlers: %{},
       next_id: 0,
       subscribers: []
     }
@@ -128,15 +130,7 @@ defmodule ACP.Connection do
   end
 
   def handle_cast({:respond, id, result}, state) do
-    response_map =
-      case result do
-        {:ok, value} -> %{"id" => id, "result" => value}
-        {:error, error} -> %{"id" => id, "error" => ACP.Error.to_json(error)}
-      end
-
-    send_json(state.output_io, response_map)
-    broadcast(state, {:outgoing, :response, id, result})
-    {:noreply, state}
+    {:noreply, respond_to_request(id, result, state)}
   end
 
   @impl true
@@ -149,9 +143,21 @@ defmodule ACP.Connection do
     {:stop, :normal, state}
   end
 
-  def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
-    state = %{state | subscribers: Enum.reject(state.subscribers, fn {_p, r} -> r == ref end)}
-    {:noreply, state}
+  def handle_info({:DOWN, ref, :process, pid, reason}, state) do
+    case Map.pop(state.request_handlers, ref) do
+      {nil, request_handlers} ->
+        state = %{state | request_handlers: request_handlers}
+        state = %{state | subscribers: Enum.reject(state.subscribers, fn {_p, r} -> r == ref end)}
+        {:noreply, state}
+
+      {id, request_handlers} ->
+        Logger.error(
+          "[ACP.Connection] Request handler exited before responding id=#{inspect(id)} pid=#{inspect(pid)} reason=#{inspect(reason)}"
+        )
+
+        state = %{state | request_handlers: request_handlers}
+        {:noreply, respond_to_request(id, {:error, ACP.Error.internal_error()}, state)}
+    end
   end
 
   # -- Internal --
@@ -203,7 +209,10 @@ defmodule ACP.Connection do
         handle_decoded_message(msg, state)
 
       {:error, reason} ->
-        Logger.error("[ACP.Connection] Failed to parse incoming JSON-RPC message: #{inspect(reason)}")
+        Logger.error(
+          "[ACP.Connection] Failed to parse incoming JSON-RPC message: #{inspect(reason)}"
+        )
+
         state
     end
   end
@@ -239,26 +248,29 @@ defmodule ACP.Connection do
         if state.handler_module do
           conn = self()
 
-          Task.start(fn ->
-            result =
-              if function_exported?(state.handler_module, :handle_request, 1) do
-                state.handler_module.handle_request(decoded_request)
-              else
-                state.handler_module.handle_request(decoded_request, state.handler_state)
-              end
+          {_pid, ref} =
+            spawn_monitor(fn ->
+              result =
+                if function_exported?(state.handler_module, :handle_request, 1) do
+                  state.handler_module.handle_request(decoded_request)
+                else
+                  state.handler_module.handle_request(decoded_request, state.handler_state)
+                end
 
-            # Encode the response value
-            response_value =
-              case result do
-                {:ok, value} -> {:ok, encode_response_value(value)}
-                {:error, _} = err -> err
-              end
+              # Encode the response value
+              response_value =
+                case result do
+                  {:ok, value} -> {:ok, encode_response_value(value)}
+                  {:error, _} = err -> err
+                end
 
-            ACP.Connection.respond(conn, id, response_value)
-          end)
+              ACP.Connection.respond(conn, id, response_value)
+            end)
+
+          %{state | request_handlers: Map.put(state.request_handlers, ref, id)}
+        else
+          state
         end
-
-        state
 
       {:error, error} ->
         # Send error response immediately
@@ -315,7 +327,10 @@ defmodule ACP.Connection do
         state
 
       {:error, error} ->
-        Logger.error("[ACP.Connection] Failed to decode notification #{method}: #{inspect(error)}")
+        Logger.error(
+          "[ACP.Connection] Failed to decode notification #{method}: #{inspect(error)}"
+        )
+
         state
     end
   end
@@ -349,6 +364,25 @@ defmodule ACP.Connection do
   end
 
   defp encode_response_value(value), do: value
+
+  defp respond_to_request(id, result, state) do
+    {ref, request_handlers} =
+      Enum.find_value(state.request_handlers, {nil, state.request_handlers}, fn {ref, handler_id} ->
+        if handler_id == id, do: {ref, Map.delete(state.request_handlers, ref)}
+      end)
+
+    if ref, do: Process.demonitor(ref, [:flush])
+
+    response_map =
+      case result do
+        {:ok, value} -> %{"id" => id, "result" => value}
+        {:error, error} -> %{"id" => id, "error" => ACP.Error.to_json(error)}
+      end
+
+    send_json(state.output_io, response_map)
+    broadcast(state, {:outgoing, :response, id, result})
+    %{state | request_handlers: request_handlers}
+  end
 
   defp broadcast(state, message) do
     for {pid, _ref} <- state.subscribers do
