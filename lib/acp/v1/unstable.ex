@@ -1,4 +1,4 @@
-defmodule ACP.Unstable do
+defmodule ACP.V1.Unstable do
   @moduledoc """
   Unstable types that are not yet part of the ACP specification.
 
@@ -9,7 +9,7 @@ end
 
 # --- Session Model Types ---
 
-defmodule ACP.ModelInfo do
+defmodule ACP.V1.ModelInfo do
   @moduledoc "Information about a selectable model. (Unstable)"
 
   @enforce_keys [:model_id, :name]
@@ -34,11 +34,11 @@ defmodule ACP.ModelInfo do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ModelInfo do
-  def encode(val, opts), do: ACP.ModelInfo.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ModelInfo do
+  def encode(val, opts), do: ACP.V1.ModelInfo.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SessionModelState do
+defmodule ACP.V1.SessionModelState do
   @moduledoc "The set of models and the one currently active. (Unstable)"
 
   @enforce_keys [:current_model_id, :available_models]
@@ -51,7 +51,7 @@ defmodule ACP.SessionModelState do
   def to_json(%__MODULE__{} = s) do
     map = %{
       "currentModelId" => s.current_model_id,
-      "availableModels" => Enum.map(s.available_models, &ACP.ModelInfo.to_json/1)
+      "availableModels" => Enum.map(s.available_models, &ACP.V1.ModelInfo.to_json/1)
     }
 
     if s.meta, do: Map.put(map, "_meta", s.meta), else: map
@@ -63,7 +63,7 @@ defmodule ACP.SessionModelState do
        current_model_id: cmid,
        available_models:
          Enum.map(models, fn m ->
-           {:ok, v} = ACP.ModelInfo.from_json(m)
+           {:ok, v} = ACP.V1.ModelInfo.from_json(m)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -71,11 +71,11 @@ defmodule ACP.SessionModelState do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionModelState do
-  def encode(val, opts), do: ACP.SessionModelState.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionModelState do
+  def encode(val, opts), do: ACP.V1.SessionModelState.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SetSessionModelRequest do
+defmodule ACP.V1.SetSessionModelRequest do
   @moduledoc "Request to set the model for a session. (Unstable)"
 
   @enforce_keys [:session_id, :model_id]
@@ -93,11 +93,12 @@ defmodule ACP.SetSessionModelRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SetSessionModelRequest do
-  def encode(val, opts), do: ACP.SetSessionModelRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SetSessionModelRequest do
+  def encode(val, opts),
+    do: ACP.V1.SetSessionModelRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SetSessionModelResponse do
+defmodule ACP.V1.SetSessionModelResponse do
   @moduledoc "Response to session/set_model. (Unstable)"
 
   defstruct [:meta]
@@ -113,14 +114,14 @@ defmodule ACP.SetSessionModelResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SetSessionModelResponse do
+defimpl Jason.Encoder, for: ACP.V1.SetSessionModelResponse do
   def encode(val, opts),
-    do: ACP.SetSessionModelResponse.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SetSessionModelResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Session Config Option Types ---
 
-defmodule ACP.SessionConfigSelectOption do
+defmodule ACP.V1.SessionConfigSelectOption do
   @moduledoc "A possible value for a session configuration option. (Unstable)"
 
   @enforce_keys [:value, :name]
@@ -145,12 +146,12 @@ defmodule ACP.SessionConfigSelectOption do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionConfigSelectOption do
+defimpl Jason.Encoder, for: ACP.V1.SessionConfigSelectOption do
   def encode(val, opts),
-    do: ACP.SessionConfigSelectOption.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SessionConfigSelectOption.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SessionConfigSelectGroup do
+defmodule ACP.V1.SessionConfigSelectGroup do
   @moduledoc "A group of possible values for a session configuration option. (Unstable)"
 
   @enforce_keys [:group, :name, :options]
@@ -162,7 +163,7 @@ defmodule ACP.SessionConfigSelectGroup do
     map = %{
       "group" => g.group,
       "name" => g.name,
-      "options" => Enum.map(g.options, &ACP.SessionConfigSelectOption.to_json/1)
+      "options" => Enum.map(g.options, &ACP.V1.SessionConfigSelectOption.to_json/1)
     }
 
     if g.meta, do: Map.put(map, "_meta", g.meta), else: map
@@ -175,7 +176,7 @@ defmodule ACP.SessionConfigSelectGroup do
        name: name,
        options:
          Enum.map(options, fn o ->
-           {:ok, v} = ACP.SessionConfigSelectOption.from_json(o)
+           {:ok, v} = ACP.V1.SessionConfigSelectOption.from_json(o)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -183,12 +184,12 @@ defmodule ACP.SessionConfigSelectGroup do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionConfigSelectGroup do
+defimpl Jason.Encoder, for: ACP.V1.SessionConfigSelectGroup do
   def encode(val, opts),
-    do: ACP.SessionConfigSelectGroup.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SessionConfigSelectGroup.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SessionConfigSelectOptions do
+defmodule ACP.V1.SessionConfigSelectOptions do
   @moduledoc """
   Possible values for a session configuration option. (Unstable)
 
@@ -197,28 +198,28 @@ defmodule ACP.SessionConfigSelectOptions do
   """
 
   @type t ::
-          {:ungrouped, [ACP.SessionConfigSelectOption.t()]}
-          | {:grouped, [ACP.SessionConfigSelectGroup.t()]}
+          {:ungrouped, [ACP.V1.SessionConfigSelectOption.t()]}
+          | {:grouped, [ACP.V1.SessionConfigSelectGroup.t()]}
 
   def to_json({:ungrouped, options}) do
-    Enum.map(options, &ACP.SessionConfigSelectOption.to_json/1)
+    Enum.map(options, &ACP.V1.SessionConfigSelectOption.to_json/1)
   end
 
   def to_json({:grouped, groups}) do
-    Enum.map(groups, &ACP.SessionConfigSelectGroup.to_json/1)
+    Enum.map(groups, &ACP.V1.SessionConfigSelectGroup.to_json/1)
   end
 
   def from_json([first | _] = list) when is_list(list) do
     if Map.has_key?(first, "group") do
       {:grouped,
        Enum.map(list, fn g ->
-         {:ok, v} = ACP.SessionConfigSelectGroup.from_json(g)
+         {:ok, v} = ACP.V1.SessionConfigSelectGroup.from_json(g)
          v
        end)}
     else
       {:ungrouped,
        Enum.map(list, fn o ->
-         {:ok, v} = ACP.SessionConfigSelectOption.from_json(o)
+         {:ok, v} = ACP.V1.SessionConfigSelectOption.from_json(o)
          v
        end)}
     end
@@ -227,7 +228,7 @@ defmodule ACP.SessionConfigSelectOptions do
   def from_json([]), do: {:ungrouped, []}
 end
 
-defmodule ACP.SessionConfigSelect do
+defmodule ACP.V1.SessionConfigSelect do
   @moduledoc "A single-value selector (dropdown) session configuration option payload. (Unstable)"
 
   @enforce_keys [:current_value, :options]
@@ -238,20 +239,21 @@ defmodule ACP.SessionConfigSelect do
   def to_json(%__MODULE__{} = s) do
     %{
       "currentValue" => s.current_value,
-      "options" => ACP.SessionConfigSelectOptions.to_json(s.options)
+      "options" => ACP.V1.SessionConfigSelectOptions.to_json(s.options)
     }
   end
 
   def from_json(%{"currentValue" => cv, "options" => opts}) do
-    {:ok, %__MODULE__{current_value: cv, options: ACP.SessionConfigSelectOptions.from_json(opts)}}
+    {:ok,
+     %__MODULE__{current_value: cv, options: ACP.V1.SessionConfigSelectOptions.from_json(opts)}}
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionConfigSelect do
-  def encode(val, opts), do: ACP.SessionConfigSelect.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionConfigSelect do
+  def encode(val, opts), do: ACP.V1.SessionConfigSelect.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SessionConfigOptionCategory do
+defmodule ACP.V1.SessionConfigOptionCategory do
   @moduledoc "Semantic category for a session configuration option. (Unstable)"
 
   @type t :: :mode | :model | :thought_level | :other
@@ -267,26 +269,26 @@ defmodule ACP.SessionConfigOptionCategory do
   def from_json(_), do: :other
 end
 
-defmodule ACP.SessionConfigKind do
+defmodule ACP.V1.SessionConfigKind do
   @moduledoc """
   Type-specific session configuration option payload. (Unstable)
 
   Tagged union by "type" field. Currently only `:select`.
   """
 
-  @type t :: {:select, ACP.SessionConfigSelect.t()}
+  @type t :: {:select, ACP.V1.SessionConfigSelect.t()}
 
   def to_json({:select, select}) do
-    ACP.SessionConfigSelect.to_json(select) |> Map.put("type", "select")
+    ACP.V1.SessionConfigSelect.to_json(select) |> Map.put("type", "select")
   end
 
   def from_json(%{"type" => "select"} = map) do
-    {:ok, val} = ACP.SessionConfigSelect.from_json(map)
+    {:ok, val} = ACP.V1.SessionConfigSelect.from_json(map)
     {:ok, {:select, val}}
   end
 end
 
-defmodule ACP.SessionConfigOption do
+defmodule ACP.V1.SessionConfigOption do
   @moduledoc "A session configuration option selector and its current state. (Unstable)"
 
   @enforce_keys [:id, :name, :kind]
@@ -304,25 +306,25 @@ defmodule ACP.SessionConfigOption do
   def new(id, name, kind), do: %__MODULE__{id: id, name: name, kind: kind}
 
   def select(id, name, current_value, options) do
-    new(id, name, {:select, ACP.SessionConfigSelect.new(current_value, options)})
+    new(id, name, {:select, ACP.V1.SessionConfigSelect.new(current_value, options)})
   end
 
   def to_json(%__MODULE__{} = o) do
     # kind is flattened into the top-level map
-    kind_map = ACP.SessionConfigKind.to_json(o.kind)
+    kind_map = ACP.V1.SessionConfigKind.to_json(o.kind)
     map = Map.merge(kind_map, %{"id" => o.id, "name" => o.name})
     map = if o.description, do: Map.put(map, "description", o.description), else: map
 
     map =
       if o.category,
-        do: Map.put(map, "category", ACP.SessionConfigOptionCategory.to_json(o.category)),
+        do: Map.put(map, "category", ACP.V1.SessionConfigOptionCategory.to_json(o.category)),
         else: map
 
     if o.meta, do: Map.put(map, "_meta", o.meta), else: map
   end
 
   def from_json(%{"id" => id, "name" => name} = map) do
-    {:ok, kind} = ACP.SessionConfigKind.from_json(map)
+    {:ok, kind} = ACP.V1.SessionConfigKind.from_json(map)
 
     {:ok,
      %__MODULE__{
@@ -332,7 +334,7 @@ defmodule ACP.SessionConfigOption do
        category:
          case Map.get(map, "category") do
            nil -> nil
-           c -> ACP.SessionConfigOptionCategory.from_json(c)
+           c -> ACP.V1.SessionConfigOptionCategory.from_json(c)
          end,
        kind: kind,
        meta: Map.get(map, "_meta")
@@ -340,11 +342,11 @@ defmodule ACP.SessionConfigOption do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionConfigOption do
-  def encode(val, opts), do: ACP.SessionConfigOption.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionConfigOption do
+  def encode(val, opts), do: ACP.V1.SessionConfigOption.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SetSessionConfigOptionRequest do
+defmodule ACP.V1.SetSessionConfigOptionRequest do
   @moduledoc "Request to set a session configuration option value. (Unstable)"
 
   @enforce_keys [:session_id, :config_id, :value]
@@ -364,12 +366,12 @@ defmodule ACP.SetSessionConfigOptionRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SetSessionConfigOptionRequest do
+defimpl Jason.Encoder, for: ACP.V1.SetSessionConfigOptionRequest do
   def encode(val, opts),
-    do: ACP.SetSessionConfigOptionRequest.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SetSessionConfigOptionRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SetSessionConfigOptionResponse do
+defmodule ACP.V1.SetSessionConfigOptionResponse do
   @moduledoc "Response to session/set_config_option. (Unstable)"
 
   @enforce_keys [:config_options]
@@ -378,7 +380,7 @@ defmodule ACP.SetSessionConfigOptionResponse do
   def new(config_options), do: %__MODULE__{config_options: config_options}
 
   def to_json(%__MODULE__{} = r) do
-    map = %{"configOptions" => Enum.map(r.config_options, &ACP.SessionConfigOption.to_json/1)}
+    map = %{"configOptions" => Enum.map(r.config_options, &ACP.V1.SessionConfigOption.to_json/1)}
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
   end
 
@@ -387,7 +389,7 @@ defmodule ACP.SetSessionConfigOptionResponse do
      %__MODULE__{
        config_options:
          Enum.map(opts, fn o ->
-           {:ok, v} = ACP.SessionConfigOption.from_json(o)
+           {:ok, v} = ACP.V1.SessionConfigOption.from_json(o)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -395,14 +397,14 @@ defmodule ACP.SetSessionConfigOptionResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SetSessionConfigOptionResponse do
+defimpl Jason.Encoder, for: ACP.V1.SetSessionConfigOptionResponse do
   def encode(val, opts),
-    do: ACP.SetSessionConfigOptionResponse.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SetSessionConfigOptionResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Session Fork Types ---
 
-defmodule ACP.ForkSessionRequest do
+defmodule ACP.V1.ForkSessionRequest do
   @moduledoc "Request to fork an existing session. (Unstable)"
 
   @enforce_keys [:session_id, :cwd]
@@ -415,7 +417,7 @@ defmodule ACP.ForkSessionRequest do
 
     map =
       if r.mcp_servers && r.mcp_servers != [],
-        do: Map.put(map, "mcpServers", Enum.map(r.mcp_servers, &ACP.McpServer.to_json/1)),
+        do: Map.put(map, "mcpServers", Enum.map(r.mcp_servers, &ACP.V1.McpServer.to_json/1)),
         else: map
 
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
@@ -429,7 +431,7 @@ defmodule ACP.ForkSessionRequest do
        mcp_servers:
          Map.get(map, "mcpServers", [])
          |> Enum.map(fn s ->
-           {:ok, v} = ACP.McpServer.from_json(s)
+           {:ok, v} = ACP.V1.McpServer.from_json(s)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -437,11 +439,11 @@ defmodule ACP.ForkSessionRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ForkSessionRequest do
-  def encode(val, opts), do: ACP.ForkSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ForkSessionRequest do
+  def encode(val, opts), do: ACP.V1.ForkSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.ForkSessionResponse do
+defmodule ACP.V1.ForkSessionResponse do
   @moduledoc "Response from forking a session. (Unstable)"
 
   @enforce_keys [:session_id]
@@ -451,11 +453,13 @@ defmodule ACP.ForkSessionResponse do
 
   def to_json(%__MODULE__{} = r) do
     map = %{"sessionId" => r.session_id}
-    map = if r.modes, do: Map.put(map, "modes", ACP.SessionModeState.to_json(r.modes)), else: map
+
+    map =
+      if r.modes, do: Map.put(map, "modes", ACP.V1.SessionModeState.to_json(r.modes)), else: map
 
     map =
       if r.models,
-        do: Map.put(map, "models", ACP.SessionModelState.to_json(r.models)),
+        do: Map.put(map, "models", ACP.V1.SessionModelState.to_json(r.models)),
         else: map
 
     map =
@@ -464,7 +468,7 @@ defmodule ACP.ForkSessionResponse do
           Map.put(
             map,
             "configOptions",
-            Enum.map(r.config_options, &ACP.SessionConfigOption.to_json/1)
+            Enum.map(r.config_options, &ACP.V1.SessionConfigOption.to_json/1)
           ),
         else: map
 
@@ -481,7 +485,7 @@ defmodule ACP.ForkSessionResponse do
              nil
 
            m ->
-             {:ok, v} = ACP.SessionModeState.from_json(m)
+             {:ok, v} = ACP.V1.SessionModeState.from_json(m)
              v
          end,
        models:
@@ -490,7 +494,7 @@ defmodule ACP.ForkSessionResponse do
              nil
 
            m ->
-             {:ok, v} = ACP.SessionModelState.from_json(m)
+             {:ok, v} = ACP.V1.SessionModelState.from_json(m)
              v
          end,
        config_options:
@@ -500,7 +504,7 @@ defmodule ACP.ForkSessionResponse do
 
            opts ->
              Enum.map(opts, fn o ->
-               {:ok, v} = ACP.SessionConfigOption.from_json(o)
+               {:ok, v} = ACP.V1.SessionConfigOption.from_json(o)
                v
              end)
          end,
@@ -509,13 +513,13 @@ defmodule ACP.ForkSessionResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ForkSessionResponse do
-  def encode(val, opts), do: ACP.ForkSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ForkSessionResponse do
+  def encode(val, opts), do: ACP.V1.ForkSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Session Resume Types ---
 
-defmodule ACP.ResumeSessionRequest do
+defmodule ACP.V1.ResumeSessionRequest do
   @moduledoc "Request to resume an existing session without replaying history. (Unstable)"
 
   @enforce_keys [:session_id, :cwd]
@@ -528,7 +532,7 @@ defmodule ACP.ResumeSessionRequest do
 
     map =
       if r.mcp_servers && r.mcp_servers != [],
-        do: Map.put(map, "mcpServers", Enum.map(r.mcp_servers, &ACP.McpServer.to_json/1)),
+        do: Map.put(map, "mcpServers", Enum.map(r.mcp_servers, &ACP.V1.McpServer.to_json/1)),
         else: map
 
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
@@ -542,7 +546,7 @@ defmodule ACP.ResumeSessionRequest do
        mcp_servers:
          Map.get(map, "mcpServers", [])
          |> Enum.map(fn s ->
-           {:ok, v} = ACP.McpServer.from_json(s)
+           {:ok, v} = ACP.V1.McpServer.from_json(s)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -550,11 +554,12 @@ defmodule ACP.ResumeSessionRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ResumeSessionRequest do
-  def encode(val, opts), do: ACP.ResumeSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ResumeSessionRequest do
+  def encode(val, opts),
+    do: ACP.V1.ResumeSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.ResumeSessionResponse do
+defmodule ACP.V1.ResumeSessionResponse do
   @moduledoc "Response from resuming a session. (Unstable)"
 
   defstruct [:modes, :models, :config_options, :meta]
@@ -563,11 +568,13 @@ defmodule ACP.ResumeSessionResponse do
 
   def to_json(%__MODULE__{} = r) do
     map = %{}
-    map = if r.modes, do: Map.put(map, "modes", ACP.SessionModeState.to_json(r.modes)), else: map
+
+    map =
+      if r.modes, do: Map.put(map, "modes", ACP.V1.SessionModeState.to_json(r.modes)), else: map
 
     map =
       if r.models,
-        do: Map.put(map, "models", ACP.SessionModelState.to_json(r.models)),
+        do: Map.put(map, "models", ACP.V1.SessionModelState.to_json(r.models)),
         else: map
 
     map =
@@ -576,7 +583,7 @@ defmodule ACP.ResumeSessionResponse do
           Map.put(
             map,
             "configOptions",
-            Enum.map(r.config_options, &ACP.SessionConfigOption.to_json/1)
+            Enum.map(r.config_options, &ACP.V1.SessionConfigOption.to_json/1)
           ),
         else: map
 
@@ -592,7 +599,7 @@ defmodule ACP.ResumeSessionResponse do
              nil
 
            m ->
-             {:ok, v} = ACP.SessionModeState.from_json(m)
+             {:ok, v} = ACP.V1.SessionModeState.from_json(m)
              v
          end,
        models:
@@ -601,7 +608,7 @@ defmodule ACP.ResumeSessionResponse do
              nil
 
            m ->
-             {:ok, v} = ACP.SessionModelState.from_json(m)
+             {:ok, v} = ACP.V1.SessionModelState.from_json(m)
              v
          end,
        config_options:
@@ -611,7 +618,7 @@ defmodule ACP.ResumeSessionResponse do
 
            opts ->
              Enum.map(opts, fn o ->
-               {:ok, v} = ACP.SessionConfigOption.from_json(o)
+               {:ok, v} = ACP.V1.SessionConfigOption.from_json(o)
                v
              end)
          end,
@@ -620,13 +627,14 @@ defmodule ACP.ResumeSessionResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ResumeSessionResponse do
-  def encode(val, opts), do: ACP.ResumeSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ResumeSessionResponse do
+  def encode(val, opts),
+    do: ACP.V1.ResumeSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Session List Types ---
 
-defmodule ACP.SessionInfo do
+defmodule ACP.V1.SessionInfo do
   @moduledoc "Information about a session returned by session/list. (Unstable)"
 
   @enforce_keys [:session_id, :cwd]
@@ -653,11 +661,11 @@ defmodule ACP.SessionInfo do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionInfo do
-  def encode(val, opts), do: ACP.SessionInfo.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionInfo do
+  def encode(val, opts), do: ACP.V1.SessionInfo.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.ListSessionsRequest do
+defmodule ACP.V1.ListSessionsRequest do
   @moduledoc "Request to list existing sessions. (Unstable)"
 
   defstruct [:cwd, :cursor, :meta]
@@ -681,11 +689,11 @@ defmodule ACP.ListSessionsRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ListSessionsRequest do
-  def encode(val, opts), do: ACP.ListSessionsRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ListSessionsRequest do
+  def encode(val, opts), do: ACP.V1.ListSessionsRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.ListSessionsResponse do
+defmodule ACP.V1.ListSessionsResponse do
   @moduledoc "Response from listing sessions. (Unstable)"
 
   @enforce_keys [:sessions]
@@ -694,7 +702,7 @@ defmodule ACP.ListSessionsResponse do
   def new(sessions), do: %__MODULE__{sessions: sessions}
 
   def to_json(%__MODULE__{} = r) do
-    map = %{"sessions" => Enum.map(r.sessions, &ACP.SessionInfo.to_json/1)}
+    map = %{"sessions" => Enum.map(r.sessions, &ACP.V1.SessionInfo.to_json/1)}
     map = if r.next_cursor, do: Map.put(map, "nextCursor", r.next_cursor), else: map
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
   end
@@ -704,7 +712,7 @@ defmodule ACP.ListSessionsResponse do
      %__MODULE__{
        sessions:
          Enum.map(sessions, fn s ->
-           {:ok, v} = ACP.SessionInfo.from_json(s)
+           {:ok, v} = ACP.V1.SessionInfo.from_json(s)
            v
          end),
        next_cursor: Map.get(map, "nextCursor"),
@@ -713,13 +721,14 @@ defmodule ACP.ListSessionsResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ListSessionsResponse do
-  def encode(val, opts), do: ACP.ListSessionsResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ListSessionsResponse do
+  def encode(val, opts),
+    do: ACP.V1.ListSessionsResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Session Capabilities (Unstable) ---
 
-defmodule ACP.SessionListCapabilities do
+defmodule ACP.V1.SessionListCapabilities do
   @moduledoc "Capabilities for session/list. (Unstable)"
 
   defstruct [:meta]
@@ -735,12 +744,12 @@ defmodule ACP.SessionListCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionListCapabilities do
+defimpl Jason.Encoder, for: ACP.V1.SessionListCapabilities do
   def encode(val, opts),
-    do: ACP.SessionListCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SessionListCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SessionForkCapabilities do
+defmodule ACP.V1.SessionForkCapabilities do
   @moduledoc "Capabilities for session/fork. (Unstable)"
 
   defstruct [:meta]
@@ -756,12 +765,12 @@ defmodule ACP.SessionForkCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionForkCapabilities do
+defimpl Jason.Encoder, for: ACP.V1.SessionForkCapabilities do
   def encode(val, opts),
-    do: ACP.SessionForkCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SessionForkCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SessionResumeCapabilities do
+defmodule ACP.V1.SessionResumeCapabilities do
   @moduledoc "Capabilities for session/resume. (Unstable)"
 
   defstruct [:meta]
@@ -777,12 +786,12 @@ defmodule ACP.SessionResumeCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionResumeCapabilities do
+defimpl Jason.Encoder, for: ACP.V1.SessionResumeCapabilities do
   def encode(val, opts),
-    do: ACP.SessionResumeCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SessionResumeCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SessionCloseCapabilities do
+defmodule ACP.V1.SessionCloseCapabilities do
   @moduledoc "Capabilities for session/close."
 
   defstruct [:meta]
@@ -798,25 +807,25 @@ defmodule ACP.SessionCloseCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionCloseCapabilities do
+defimpl Jason.Encoder, for: ACP.V1.SessionCloseCapabilities do
   def encode(val, opts),
-    do: ACP.SessionCloseCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SessionCloseCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Client-Side Unstable Types ---
 
-defmodule ACP.ConfigOptionUpdate do
+defmodule ACP.V1.ConfigOptionUpdate do
   @moduledoc "Session configuration options have been updated. (Unstable)"
 
   @enforce_keys [:config_options]
   defstruct [:config_options, :meta]
 
-  @type t :: %__MODULE__{config_options: [ACP.SessionConfigOption.t()], meta: map() | nil}
+  @type t :: %__MODULE__{config_options: [ACP.V1.SessionConfigOption.t()], meta: map() | nil}
 
   def new(config_options), do: %__MODULE__{config_options: config_options}
 
   def to_json(%__MODULE__{} = c) do
-    map = %{"configOptions" => Enum.map(c.config_options, &ACP.SessionConfigOption.to_json/1)}
+    map = %{"configOptions" => Enum.map(c.config_options, &ACP.V1.SessionConfigOption.to_json/1)}
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
   end
 
@@ -825,7 +834,7 @@ defmodule ACP.ConfigOptionUpdate do
      %__MODULE__{
        config_options:
          Enum.map(Map.get(map, "configOptions", []), fn o ->
-           {:ok, v} = ACP.SessionConfigOption.from_json(o)
+           {:ok, v} = ACP.V1.SessionConfigOption.from_json(o)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -833,11 +842,11 @@ defmodule ACP.ConfigOptionUpdate do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ConfigOptionUpdate do
-  def encode(val, opts), do: ACP.ConfigOptionUpdate.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ConfigOptionUpdate do
+  def encode(val, opts), do: ACP.V1.ConfigOptionUpdate.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.SessionInfoUpdate do
+defmodule ACP.V1.SessionInfoUpdate do
   @moduledoc """
   Update to session metadata. (Unstable)
 
@@ -895,6 +904,6 @@ defmodule ACP.SessionInfoUpdate do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionInfoUpdate do
-  def encode(val, opts), do: ACP.SessionInfoUpdate.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionInfoUpdate do
+  def encode(val, opts), do: ACP.V1.SessionInfoUpdate.to_json(val) |> Jason.Encoder.encode(opts)
 end

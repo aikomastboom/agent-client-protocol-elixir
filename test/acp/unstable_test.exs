@@ -52,17 +52,21 @@ defmodule ACP.UnstableTest do
   describe "SessionModelState" do
     test "round trip serialization" do
       model =
-        ACP.SessionModelState.new("opus-4", [
-          ACP.ModelInfo.new("opus-4", "Claude Opus 4"),
-          %ACP.ModelInfo{model_id: "sonnet-4", name: "Claude Sonnet 4", description: "Fast model"}
+        ACP.V1.SessionModelState.new("opus-4", [
+          ACP.V1.ModelInfo.new("opus-4", "Claude Opus 4"),
+          %ACP.V1.ModelInfo{
+            model_id: "sonnet-4",
+            name: "Claude Sonnet 4",
+            description: "Fast model"
+          }
         ])
 
-      json = ACP.SessionModelState.to_json(model)
+      json = ACP.V1.SessionModelState.to_json(model)
       assert json["currentModelId"] == "opus-4"
       assert length(json["availableModels"]) == 2
       assert hd(json["availableModels"])["modelId"] == "opus-4"
 
-      {:ok, decoded} = ACP.SessionModelState.from_json(json)
+      {:ok, decoded} = ACP.V1.SessionModelState.from_json(json)
       assert decoded.current_model_id == "opus-4"
       assert length(decoded.available_models) == 2
       assert Enum.at(decoded.available_models, 1).description == "Fast model"
@@ -71,23 +75,23 @@ defmodule ACP.UnstableTest do
 
   describe "ModelInfo" do
     test "serialization with optional description" do
-      info = ACP.ModelInfo.new("test-model", "Test Model")
-      json = ACP.ModelInfo.to_json(info)
+      info = ACP.V1.ModelInfo.new("test-model", "Test Model")
+      json = ACP.V1.ModelInfo.to_json(info)
       assert json == %{"modelId" => "test-model", "name" => "Test Model"}
 
       info_with_desc = %{info | description: "A test model"}
-      json2 = ACP.ModelInfo.to_json(info_with_desc)
+      json2 = ACP.V1.ModelInfo.to_json(info_with_desc)
       assert json2["description"] == "A test model"
     end
   end
 
   describe "SetSessionModelRequest" do
     test "round trip" do
-      req = ACP.SetSessionModelRequest.new("sess-1", "opus-4")
-      json = ACP.SetSessionModelRequest.to_json(req)
+      req = ACP.V1.SetSessionModelRequest.new("sess-1", "opus-4")
+      json = ACP.V1.SetSessionModelRequest.to_json(req)
       assert json == %{"sessionId" => "sess-1", "modelId" => "opus-4"}
 
-      {:ok, decoded} = ACP.SetSessionModelRequest.from_json(json)
+      {:ok, decoded} = ACP.V1.SetSessionModelRequest.from_json(json)
       assert decoded.session_id == "sess-1"
       assert decoded.model_id == "opus-4"
     end
@@ -95,11 +99,11 @@ defmodule ACP.UnstableTest do
 
   describe "SetSessionModelResponse" do
     test "empty response" do
-      resp = ACP.SetSessionModelResponse.new()
-      json = ACP.SetSessionModelResponse.to_json(resp)
+      resp = ACP.V1.SetSessionModelResponse.new()
+      json = ACP.V1.SetSessionModelResponse.to_json(resp)
       assert json == %{}
 
-      {:ok, decoded} = ACP.SetSessionModelResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.SetSessionModelResponse.from_json(json)
       assert decoded.meta == nil
     end
   end
@@ -109,25 +113,25 @@ defmodule ACP.UnstableTest do
   describe "SessionConfigOption" do
     test "select option round trip" do
       opt =
-        ACP.SessionConfigOption.select(
+        ACP.V1.SessionConfigOption.select(
           "model-selector",
           "Model",
           "opus-4",
           {:ungrouped,
            [
-             ACP.SessionConfigSelectOption.new("opus-4", "Claude Opus 4"),
-             ACP.SessionConfigSelectOption.new("sonnet-4", "Claude Sonnet 4")
+             ACP.V1.SessionConfigSelectOption.new("opus-4", "Claude Opus 4"),
+             ACP.V1.SessionConfigSelectOption.new("sonnet-4", "Claude Sonnet 4")
            ]}
         )
 
-      json = ACP.SessionConfigOption.to_json(opt)
+      json = ACP.V1.SessionConfigOption.to_json(opt)
       assert json["id"] == "model-selector"
       assert json["name"] == "Model"
       assert json["type"] == "select"
       assert json["currentValue"] == "opus-4"
       assert length(json["options"]) == 2
 
-      {:ok, decoded} = ACP.SessionConfigOption.from_json(json)
+      {:ok, decoded} = ACP.V1.SessionConfigOption.from_json(json)
       assert decoded.id == "model-selector"
       assert {:select, select} = decoded.kind
       assert select.current_value == "opus-4"
@@ -136,26 +140,26 @@ defmodule ACP.UnstableTest do
 
     test "select with grouped options" do
       opt =
-        ACP.SessionConfigOption.select(
+        ACP.V1.SessionConfigOption.select(
           "model-selector",
           "Model",
           "opus-4",
           {:grouped,
            [
-             ACP.SessionConfigSelectGroup.new("premium", "Premium Models", [
-               ACP.SessionConfigSelectOption.new("opus-4", "Claude Opus 4")
+             ACP.V1.SessionConfigSelectGroup.new("premium", "Premium Models", [
+               ACP.V1.SessionConfigSelectOption.new("opus-4", "Claude Opus 4")
              ]),
-             ACP.SessionConfigSelectGroup.new("standard", "Standard Models", [
-               ACP.SessionConfigSelectOption.new("sonnet-4", "Claude Sonnet 4")
+             ACP.V1.SessionConfigSelectGroup.new("standard", "Standard Models", [
+               ACP.V1.SessionConfigSelectOption.new("sonnet-4", "Claude Sonnet 4")
              ])
            ]}
         )
 
-      json = ACP.SessionConfigOption.to_json(opt)
+      json = ACP.V1.SessionConfigOption.to_json(opt)
       assert length(json["options"]) == 2
       assert hd(json["options"])["group"] == "premium"
 
-      {:ok, decoded} = ACP.SessionConfigOption.from_json(json)
+      {:ok, decoded} = ACP.V1.SessionConfigOption.from_json(json)
       {:select, select} = decoded.kind
       {:grouped, groups} = select.options
       assert length(groups) == 2
@@ -164,36 +168,36 @@ defmodule ACP.UnstableTest do
 
     test "with category" do
       opt = %{
-        ACP.SessionConfigOption.select("m", "M", "v1", {:ungrouped, []})
+        ACP.V1.SessionConfigOption.select("m", "M", "v1", {:ungrouped, []})
         | category: :model
       }
 
-      json = ACP.SessionConfigOption.to_json(opt)
+      json = ACP.V1.SessionConfigOption.to_json(opt)
       assert json["category"] == "model"
 
-      {:ok, decoded} = ACP.SessionConfigOption.from_json(json)
+      {:ok, decoded} = ACP.V1.SessionConfigOption.from_json(json)
       assert decoded.category == :model
     end
   end
 
   describe "SessionConfigOptionCategory" do
     test "all variants" do
-      assert ACP.SessionConfigOptionCategory.to_json(:mode) == "mode"
-      assert ACP.SessionConfigOptionCategory.to_json(:model) == "model"
-      assert ACP.SessionConfigOptionCategory.to_json(:thought_level) == "thought_level"
-      assert ACP.SessionConfigOptionCategory.to_json(:other) == "other"
+      assert ACP.V1.SessionConfigOptionCategory.to_json(:mode) == "mode"
+      assert ACP.V1.SessionConfigOptionCategory.to_json(:model) == "model"
+      assert ACP.V1.SessionConfigOptionCategory.to_json(:thought_level) == "thought_level"
+      assert ACP.V1.SessionConfigOptionCategory.to_json(:other) == "other"
 
-      assert ACP.SessionConfigOptionCategory.from_json("mode") == :mode
-      assert ACP.SessionConfigOptionCategory.from_json("model") == :model
-      assert ACP.SessionConfigOptionCategory.from_json("thought_level") == :thought_level
-      assert ACP.SessionConfigOptionCategory.from_json("unknown") == :other
+      assert ACP.V1.SessionConfigOptionCategory.from_json("mode") == :mode
+      assert ACP.V1.SessionConfigOptionCategory.from_json("model") == :model
+      assert ACP.V1.SessionConfigOptionCategory.from_json("thought_level") == :thought_level
+      assert ACP.V1.SessionConfigOptionCategory.from_json("unknown") == :other
     end
   end
 
   describe "SetSessionConfigOptionRequest" do
     test "round trip" do
-      req = ACP.SetSessionConfigOptionRequest.new("sess-1", "model-selector", "opus-4")
-      json = ACP.SetSessionConfigOptionRequest.to_json(req)
+      req = ACP.V1.SetSessionConfigOptionRequest.new("sess-1", "model-selector", "opus-4")
+      json = ACP.V1.SetSessionConfigOptionRequest.to_json(req)
 
       assert json == %{
                "sessionId" => "sess-1",
@@ -201,7 +205,7 @@ defmodule ACP.UnstableTest do
                "value" => "opus-4"
              }
 
-      {:ok, decoded} = ACP.SetSessionConfigOptionRequest.from_json(json)
+      {:ok, decoded} = ACP.V1.SetSessionConfigOptionRequest.from_json(json)
       assert decoded.config_id == "model-selector"
       assert decoded.value == "opus-4"
     end
@@ -210,14 +214,14 @@ defmodule ACP.UnstableTest do
   describe "SetSessionConfigOptionResponse" do
     test "round trip" do
       resp =
-        ACP.SetSessionConfigOptionResponse.new([
-          ACP.SessionConfigOption.select("m", "Model", "v1", {:ungrouped, []})
+        ACP.V1.SetSessionConfigOptionResponse.new([
+          ACP.V1.SessionConfigOption.select("m", "Model", "v1", {:ungrouped, []})
         ])
 
-      json = ACP.SetSessionConfigOptionResponse.to_json(resp)
+      json = ACP.V1.SetSessionConfigOptionResponse.to_json(resp)
       assert length(json["configOptions"]) == 1
 
-      {:ok, decoded} = ACP.SetSessionConfigOptionResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.SetSessionConfigOptionResponse.from_json(json)
       assert length(decoded.config_options) == 1
     end
   end
@@ -226,11 +230,11 @@ defmodule ACP.UnstableTest do
 
   describe "ForkSessionRequest" do
     test "round trip" do
-      req = ACP.ForkSessionRequest.new("sess-1", "/home/user")
-      json = ACP.ForkSessionRequest.to_json(req)
+      req = ACP.V1.ForkSessionRequest.new("sess-1", "/home/user")
+      json = ACP.V1.ForkSessionRequest.to_json(req)
       assert json == %{"sessionId" => "sess-1", "cwd" => "/home/user"}
 
-      {:ok, decoded} = ACP.ForkSessionRequest.from_json(json)
+      {:ok, decoded} = ACP.V1.ForkSessionRequest.from_json(json)
       assert decoded.session_id == "sess-1"
       assert decoded.cwd == "/home/user"
       assert decoded.mcp_servers == []
@@ -239,11 +243,11 @@ defmodule ACP.UnstableTest do
 
   describe "ForkSessionResponse" do
     test "minimal round trip" do
-      resp = ACP.ForkSessionResponse.new("new-sess")
-      json = ACP.ForkSessionResponse.to_json(resp)
+      resp = ACP.V1.ForkSessionResponse.new("new-sess")
+      json = ACP.V1.ForkSessionResponse.to_json(resp)
       assert json == %{"sessionId" => "new-sess"}
 
-      {:ok, decoded} = ACP.ForkSessionResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.ForkSessionResponse.from_json(json)
       assert decoded.session_id == "new-sess"
       assert decoded.modes == nil
       assert decoded.models == nil
@@ -251,15 +255,15 @@ defmodule ACP.UnstableTest do
     end
 
     test "with models and config_options" do
-      resp = %ACP.ForkSessionResponse{
+      resp = %ACP.V1.ForkSessionResponse{
         session_id: "new-sess",
-        models: ACP.SessionModelState.new("opus", [ACP.ModelInfo.new("opus", "Opus")])
+        models: ACP.V1.SessionModelState.new("opus", [ACP.V1.ModelInfo.new("opus", "Opus")])
       }
 
-      json = ACP.ForkSessionResponse.to_json(resp)
+      json = ACP.V1.ForkSessionResponse.to_json(resp)
       assert json["models"]["currentModelId"] == "opus"
 
-      {:ok, decoded} = ACP.ForkSessionResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.ForkSessionResponse.from_json(json)
       assert decoded.models.current_model_id == "opus"
     end
   end
@@ -268,22 +272,22 @@ defmodule ACP.UnstableTest do
 
   describe "ResumeSessionRequest" do
     test "round trip" do
-      req = ACP.ResumeSessionRequest.new("sess-1", "/home/user")
-      json = ACP.ResumeSessionRequest.to_json(req)
+      req = ACP.V1.ResumeSessionRequest.new("sess-1", "/home/user")
+      json = ACP.V1.ResumeSessionRequest.to_json(req)
       assert json == %{"sessionId" => "sess-1", "cwd" => "/home/user"}
 
-      {:ok, decoded} = ACP.ResumeSessionRequest.from_json(json)
+      {:ok, decoded} = ACP.V1.ResumeSessionRequest.from_json(json)
       assert decoded.session_id == "sess-1"
     end
   end
 
   describe "ResumeSessionResponse" do
     test "empty round trip" do
-      resp = ACP.ResumeSessionResponse.new()
-      json = ACP.ResumeSessionResponse.to_json(resp)
+      resp = ACP.V1.ResumeSessionResponse.new()
+      json = ACP.V1.ResumeSessionResponse.to_json(resp)
       assert json == %{}
 
-      {:ok, decoded} = ACP.ResumeSessionResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.ResumeSessionResponse.from_json(json)
       assert decoded.modes == nil
     end
   end
@@ -292,18 +296,18 @@ defmodule ACP.UnstableTest do
 
   describe "ListSessionsRequest" do
     test "empty round trip" do
-      req = ACP.ListSessionsRequest.new()
-      json = ACP.ListSessionsRequest.to_json(req)
+      req = ACP.V1.ListSessionsRequest.new()
+      json = ACP.V1.ListSessionsRequest.to_json(req)
       assert json == %{}
 
-      {:ok, decoded} = ACP.ListSessionsRequest.from_json(json)
+      {:ok, decoded} = ACP.V1.ListSessionsRequest.from_json(json)
       assert decoded.cwd == nil
       assert decoded.cursor == nil
     end
 
     test "with cwd and cursor" do
-      req = %ACP.ListSessionsRequest{cwd: "/home", cursor: "abc123"}
-      json = ACP.ListSessionsRequest.to_json(req)
+      req = %ACP.V1.ListSessionsRequest{cwd: "/home", cursor: "abc123"}
+      json = ACP.V1.ListSessionsRequest.to_json(req)
       assert json == %{"cwd" => "/home", "cursor" => "abc123"}
     end
   end
@@ -311,9 +315,9 @@ defmodule ACP.UnstableTest do
   describe "ListSessionsResponse" do
     test "round trip" do
       resp =
-        ACP.ListSessionsResponse.new([
-          ACP.SessionInfo.new("sess-1", "/home"),
-          %ACP.SessionInfo{
+        ACP.V1.ListSessionsResponse.new([
+          ACP.V1.SessionInfo.new("sess-1", "/home"),
+          %ACP.V1.SessionInfo{
             session_id: "sess-2",
             cwd: "/tmp",
             title: "My Session",
@@ -321,18 +325,18 @@ defmodule ACP.UnstableTest do
           }
         ])
 
-      json = ACP.ListSessionsResponse.to_json(resp)
+      json = ACP.V1.ListSessionsResponse.to_json(resp)
       assert length(json["sessions"]) == 2
       assert Enum.at(json["sessions"], 1)["title"] == "My Session"
 
-      {:ok, decoded} = ACP.ListSessionsResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.ListSessionsResponse.from_json(json)
       assert length(decoded.sessions) == 2
       assert Enum.at(decoded.sessions, 1).title == "My Session"
     end
 
     test "with next_cursor" do
-      resp = %{ACP.ListSessionsResponse.new([]) | next_cursor: "page2"}
-      json = ACP.ListSessionsResponse.to_json(resp)
+      resp = %{ACP.V1.ListSessionsResponse.new([]) | next_cursor: "page2"}
+      json = ACP.V1.ListSessionsResponse.to_json(resp)
       assert json["nextCursor"] == "page2"
     end
   end
@@ -341,20 +345,20 @@ defmodule ACP.UnstableTest do
 
   describe "SessionCapabilities with unstable fields" do
     test "with list/fork/resume capabilities" do
-      caps = %ACP.SessionCapabilities{
+      caps = %ACP.V1.SessionCapabilities{
         modes: true,
-        list: ACP.SessionListCapabilities.new(),
-        fork: ACP.SessionForkCapabilities.new(),
-        resume: ACP.SessionResumeCapabilities.new()
+        list: ACP.V1.SessionListCapabilities.new(),
+        fork: ACP.V1.SessionForkCapabilities.new(),
+        resume: ACP.V1.SessionResumeCapabilities.new()
       }
 
-      json = ACP.SessionCapabilities.to_json(caps)
+      json = ACP.V1.SessionCapabilities.to_json(caps)
       assert json["modes"] == true
       assert json["list"] == %{}
       assert json["fork"] == %{}
       assert json["resume"] == %{}
 
-      {:ok, decoded} = ACP.SessionCapabilities.from_json(json)
+      {:ok, decoded} = ACP.V1.SessionCapabilities.from_json(json)
       assert decoded.modes == true
       assert decoded.list != nil
       assert decoded.fork != nil
@@ -367,14 +371,14 @@ defmodule ACP.UnstableTest do
   describe "ConfigOptionUpdate" do
     test "round trip" do
       update =
-        ACP.ConfigOptionUpdate.new([
-          ACP.SessionConfigOption.select("m", "Model", "v1", {:ungrouped, []})
+        ACP.V1.ConfigOptionUpdate.new([
+          ACP.V1.SessionConfigOption.select("m", "Model", "v1", {:ungrouped, []})
         ])
 
-      json = ACP.ConfigOptionUpdate.to_json(update)
+      json = ACP.V1.ConfigOptionUpdate.to_json(update)
       assert length(json["configOptions"]) == 1
 
-      {:ok, decoded} = ACP.ConfigOptionUpdate.from_json(json)
+      {:ok, decoded} = ACP.V1.ConfigOptionUpdate.from_json(json)
       assert length(decoded.config_options) == 1
     end
   end
@@ -383,47 +387,47 @@ defmodule ACP.UnstableTest do
 
   describe "SessionInfoUpdate" do
     test "empty (all undefined)" do
-      update = ACP.SessionInfoUpdate.new()
-      json = ACP.SessionInfoUpdate.to_json(update)
+      update = ACP.V1.SessionInfoUpdate.new()
+      json = ACP.V1.SessionInfoUpdate.to_json(update)
       assert json == %{}
     end
 
     test "with title set to value" do
-      update = %ACP.SessionInfoUpdate{title: {:value, "My Session"}}
-      json = ACP.SessionInfoUpdate.to_json(update)
+      update = %ACP.V1.SessionInfoUpdate{title: {:value, "My Session"}}
+      json = ACP.V1.SessionInfoUpdate.to_json(update)
       assert json == %{"title" => "My Session"}
     end
 
     test "with title set to null (clear)" do
-      update = %ACP.SessionInfoUpdate{title: nil}
-      json = ACP.SessionInfoUpdate.to_json(update)
+      update = %ACP.V1.SessionInfoUpdate{title: nil}
+      json = ACP.V1.SessionInfoUpdate.to_json(update)
       assert json == %{"title" => nil}
     end
 
     test "round trip with values" do
-      update = %ACP.SessionInfoUpdate{
+      update = %ACP.V1.SessionInfoUpdate{
         title: {:value, "Test"},
         updated_at: {:value, "2025-01-01T00:00:00Z"}
       }
 
-      json = ACP.SessionInfoUpdate.to_json(update)
+      json = ACP.V1.SessionInfoUpdate.to_json(update)
       assert json["title"] == "Test"
       assert json["updatedAt"] == "2025-01-01T00:00:00Z"
 
-      {:ok, decoded} = ACP.SessionInfoUpdate.from_json(json)
+      {:ok, decoded} = ACP.V1.SessionInfoUpdate.from_json(json)
       assert decoded.title == {:value, "Test"}
       assert decoded.updated_at == {:value, "2025-01-01T00:00:00Z"}
     end
 
     test "round trip with null values" do
       json = %{"title" => nil, "updatedAt" => nil}
-      {:ok, decoded} = ACP.SessionInfoUpdate.from_json(json)
+      {:ok, decoded} = ACP.V1.SessionInfoUpdate.from_json(json)
       assert decoded.title == nil
       assert decoded.updated_at == nil
     end
 
     test "round trip with missing fields" do
-      {:ok, decoded} = ACP.SessionInfoUpdate.from_json(%{})
+      {:ok, decoded} = ACP.V1.SessionInfoUpdate.from_json(%{})
       assert decoded.title == :undefined
       assert decoded.updated_at == :undefined
     end
@@ -435,27 +439,27 @@ defmodule ACP.UnstableTest do
     test "config_option_update round trip" do
       update =
         {:config_option_update,
-         ACP.ConfigOptionUpdate.new([
-           ACP.SessionConfigOption.select("m", "Model", "v1", {:ungrouped, []})
+         ACP.V1.ConfigOptionUpdate.new([
+           ACP.V1.SessionConfigOption.select("m", "Model", "v1", {:ungrouped, []})
          ])}
 
-      json = ACP.SessionUpdate.to_json(update)
+      json = ACP.V1.SessionUpdate.to_json(update)
       assert json["sessionUpdate"] == "config_option_update"
       assert length(json["configOptions"]) == 1
 
-      decoded = ACP.SessionUpdate.from_json(json)
+      decoded = ACP.V1.SessionUpdate.from_json(json)
       assert {:config_option_update, cou} = decoded
       assert length(cou.config_options) == 1
     end
 
     test "session_info_update round trip" do
-      update = {:session_info_update, %ACP.SessionInfoUpdate{title: {:value, "Updated"}}}
+      update = {:session_info_update, %ACP.V1.SessionInfoUpdate{title: {:value, "Updated"}}}
 
-      json = ACP.SessionUpdate.to_json(update)
+      json = ACP.V1.SessionUpdate.to_json(update)
       assert json["sessionUpdate"] == "session_info_update"
       assert json["title"] == "Updated"
 
-      decoded = ACP.SessionUpdate.from_json(json)
+      decoded = ACP.V1.SessionUpdate.from_json(json)
       assert {:session_info_update, siu} = decoded
       assert siu.title == {:value, "Updated"}
     end
@@ -466,28 +470,28 @@ defmodule ACP.UnstableTest do
   describe "AgentSide unstable decode_request" do
     test "session/list" do
       {:ok, {:list_sessions, req}} =
-        ACP.AgentSide.decode_request("session/list", %{})
+        ACP.V1.AgentSide.decode_request("session/list", %{})
 
-      assert %ACP.ListSessionsRequest{} = req
+      assert %ACP.V1.ListSessionsRequest{} = req
     end
 
     test "session/fork" do
       {:ok, {:fork_session, req}} =
-        ACP.AgentSide.decode_request("session/fork", %{"sessionId" => "s1", "cwd" => "/tmp"})
+        ACP.V1.AgentSide.decode_request("session/fork", %{"sessionId" => "s1", "cwd" => "/tmp"})
 
       assert req.session_id == "s1"
     end
 
     test "session/resume" do
       {:ok, {:resume_session, req}} =
-        ACP.AgentSide.decode_request("session/resume", %{"sessionId" => "s1", "cwd" => "/tmp"})
+        ACP.V1.AgentSide.decode_request("session/resume", %{"sessionId" => "s1", "cwd" => "/tmp"})
 
       assert req.session_id == "s1"
     end
 
     test "session/set_config_option" do
       {:ok, {:set_session_config_option, req}} =
-        ACP.AgentSide.decode_request("session/set_config_option", %{
+        ACP.V1.AgentSide.decode_request("session/set_config_option", %{
           "sessionId" => "s1",
           "configId" => "model",
           "value" => "opus"
@@ -498,7 +502,7 @@ defmodule ACP.UnstableTest do
 
     test "session/set_model" do
       {:ok, {:set_session_model, req}} =
-        ACP.AgentSide.decode_request("session/set_model", %{
+        ACP.V1.AgentSide.decode_request("session/set_model", %{
           "sessionId" => "s1",
           "modelId" => "opus-4"
         })
@@ -511,15 +515,15 @@ defmodule ACP.UnstableTest do
 
   describe "MethodNames unstable" do
     test "unstable method names" do
-      assert ACP.MethodNames.session_fork() == "session/fork"
-      assert ACP.MethodNames.session_resume() == "session/resume"
-      assert ACP.MethodNames.session_list() == "session/list"
-      assert ACP.MethodNames.session_set_config_option() == "session/set_config_option"
-      assert ACP.MethodNames.session_set_model() == "session/set_model"
+      assert ACP.V1.MethodNames.session_fork() == "session/fork"
+      assert ACP.V1.MethodNames.session_resume() == "session/resume"
+      assert ACP.V1.MethodNames.session_list() == "session/list"
+      assert ACP.V1.MethodNames.session_set_config_option() == "session/set_config_option"
+      assert ACP.V1.MethodNames.session_set_model() == "session/set_model"
     end
 
     test "agent_methods includes unstable" do
-      methods = ACP.MethodNames.agent_methods()
+      methods = ACP.V1.MethodNames.agent_methods()
       assert "session/fork" in methods
       assert "session/resume" in methods
       assert "session/list" in methods
@@ -532,14 +536,14 @@ defmodule ACP.UnstableTest do
 
   describe "ClientRequest unstable variants" do
     test "method names" do
-      assert ACP.ClientRequest.method({:list_sessions, nil}) == "session/list"
-      assert ACP.ClientRequest.method({:fork_session, nil}) == "session/fork"
-      assert ACP.ClientRequest.method({:resume_session, nil}) == "session/resume"
+      assert ACP.V1.ClientRequest.method({:list_sessions, nil}) == "session/list"
+      assert ACP.V1.ClientRequest.method({:fork_session, nil}) == "session/fork"
+      assert ACP.V1.ClientRequest.method({:resume_session, nil}) == "session/resume"
 
-      assert ACP.ClientRequest.method({:set_session_config_option, nil}) ==
+      assert ACP.V1.ClientRequest.method({:set_session_config_option, nil}) ==
                "session/set_config_option"
 
-      assert ACP.ClientRequest.method({:set_session_model, nil}) == "session/set_model"
+      assert ACP.V1.ClientRequest.method({:set_session_model, nil}) == "session/set_model"
     end
   end
 
@@ -547,44 +551,44 @@ defmodule ACP.UnstableTest do
 
   describe "NewSessionResponse with unstable fields" do
     test "with models" do
-      resp = %ACP.NewSessionResponse{
+      resp = %ACP.V1.NewSessionResponse{
         session_id: "s1",
-        models: ACP.SessionModelState.new("opus", [ACP.ModelInfo.new("opus", "Opus")])
+        models: ACP.V1.SessionModelState.new("opus", [ACP.V1.ModelInfo.new("opus", "Opus")])
       }
 
-      json = ACP.NewSessionResponse.to_json(resp)
+      json = ACP.V1.NewSessionResponse.to_json(resp)
       assert json["models"]["currentModelId"] == "opus"
 
-      {:ok, decoded} = ACP.NewSessionResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.NewSessionResponse.from_json(json)
       assert decoded.models.current_model_id == "opus"
     end
 
     test "with config_options" do
-      resp = %ACP.NewSessionResponse{
+      resp = %ACP.V1.NewSessionResponse{
         session_id: "s1",
-        config_options: [ACP.SessionConfigOption.select("m", "M", "v", {:ungrouped, []})]
+        config_options: [ACP.V1.SessionConfigOption.select("m", "M", "v", {:ungrouped, []})]
       }
 
-      json = ACP.NewSessionResponse.to_json(resp)
+      json = ACP.V1.NewSessionResponse.to_json(resp)
       assert length(json["configOptions"]) == 1
 
-      {:ok, decoded} = ACP.NewSessionResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.NewSessionResponse.from_json(json)
       assert length(decoded.config_options) == 1
     end
   end
 
   describe "LoadSessionResponse with unstable fields" do
     test "with models and config_options" do
-      resp = %ACP.LoadSessionResponse{
-        models: ACP.SessionModelState.new("opus", [ACP.ModelInfo.new("opus", "Opus")]),
-        config_options: [ACP.SessionConfigOption.select("m", "M", "v", {:ungrouped, []})]
+      resp = %ACP.V1.LoadSessionResponse{
+        models: ACP.V1.SessionModelState.new("opus", [ACP.V1.ModelInfo.new("opus", "Opus")]),
+        config_options: [ACP.V1.SessionConfigOption.select("m", "M", "v", {:ungrouped, []})]
       }
 
-      json = ACP.LoadSessionResponse.to_json(resp)
+      json = ACP.V1.LoadSessionResponse.to_json(resp)
       assert json["models"]["currentModelId"] == "opus"
       assert length(json["configOptions"]) == 1
 
-      {:ok, decoded} = ACP.LoadSessionResponse.from_json(json)
+      {:ok, decoded} = ACP.V1.LoadSessionResponse.from_json(json)
       assert decoded.models.current_model_id == "opus"
       assert length(decoded.config_options) == 1
     end

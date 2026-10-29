@@ -1,4 +1,4 @@
-defmodule ACP.ToolKind do
+defmodule ACP.V1.ToolKind do
   @moduledoc "Categories of tools that can be invoked."
 
   @type t ::
@@ -40,7 +40,7 @@ defmodule ACP.ToolKind do
   def is_default?(_), do: false
 end
 
-defmodule ACP.ToolCallStatus do
+defmodule ACP.V1.ToolCallStatus do
   @moduledoc "Execution status of a tool call."
 
   @type t :: :pending | :in_progress | :completed | :failed
@@ -60,7 +60,7 @@ defmodule ACP.ToolCallStatus do
   def is_default?(_), do: false
 end
 
-defmodule ACP.ToolCallLocation do
+defmodule ACP.V1.ToolCallLocation do
   @moduledoc "A file location being accessed or modified by a tool."
 
   @type t :: %__MODULE__{
@@ -90,7 +90,7 @@ defmodule ACP.ToolCallLocation do
   end
 end
 
-defmodule ACP.Diff do
+defmodule ACP.V1.Diff do
   @moduledoc "A diff representing file modifications."
 
   @type t :: %__MODULE__{
@@ -121,7 +121,7 @@ defmodule ACP.Diff do
   end
 end
 
-defmodule ACP.ToolCallTerminal do
+defmodule ACP.V1.ToolCallTerminal do
   @moduledoc "Embed a terminal created with terminal/create by its id."
 
   @type t :: %__MODULE__{
@@ -148,11 +148,11 @@ defmodule ACP.ToolCallTerminal do
   end
 end
 
-defmodule ACP.ToolCallContentWrapper do
+defmodule ACP.V1.ToolCallContentWrapper do
   @moduledoc "Standard content block wrapper for tool call content."
 
   @type t :: %__MODULE__{
-          content: ACP.ContentBlock.t(),
+          content: ACP.V1.ContentBlock.t(),
           meta: map() | nil
         }
 
@@ -162,12 +162,12 @@ defmodule ACP.ToolCallContentWrapper do
   def new(content), do: %__MODULE__{content: content}
 
   def to_json(%__MODULE__{} = c) do
-    map = %{"content" => ACP.ContentBlock.to_json(c.content)}
+    map = %{"content" => ACP.V1.ContentBlock.to_json(c.content)}
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
   end
 
   def from_json(map) when is_map(map) do
-    {:ok, cb} = ACP.ContentBlock.from_json(Map.fetch!(map, "content"))
+    {:ok, cb} = ACP.V1.ContentBlock.from_json(Map.fetch!(map, "content"))
 
     {:ok,
      %__MODULE__{
@@ -177,49 +177,49 @@ defmodule ACP.ToolCallContentWrapper do
   end
 end
 
-defmodule ACP.ToolCallContent do
+defmodule ACP.V1.ToolCallContent do
   @moduledoc "Content produced by a tool call. Tagged union with type discriminator."
 
   @type t ::
-          {:content, ACP.ToolCallContentWrapper.t()}
-          | {:diff, ACP.Diff.t()}
-          | {:terminal, ACP.ToolCallTerminal.t()}
+          {:content, ACP.V1.ToolCallContentWrapper.t()}
+          | {:diff, ACP.V1.Diff.t()}
+          | {:terminal, ACP.V1.ToolCallTerminal.t()}
 
   def content(wrapper), do: {:content, wrapper}
   def diff(diff), do: {:diff, diff}
   def terminal(terminal), do: {:terminal, terminal}
 
   def to_json({:content, c}),
-    do: Map.put(ACP.ToolCallContentWrapper.to_json(c), "type", "content")
+    do: Map.put(ACP.V1.ToolCallContentWrapper.to_json(c), "type", "content")
 
-  def to_json({:diff, d}), do: Map.put(ACP.Diff.to_json(d), "type", "diff")
-  def to_json({:terminal, t}), do: Map.put(ACP.ToolCallTerminal.to_json(t), "type", "terminal")
+  def to_json({:diff, d}), do: Map.put(ACP.V1.Diff.to_json(d), "type", "diff")
+  def to_json({:terminal, t}), do: Map.put(ACP.V1.ToolCallTerminal.to_json(t), "type", "terminal")
 
   def from_json(%{"type" => "content"} = map) do
-    {:ok, c} = ACP.ToolCallContentWrapper.from_json(Map.delete(map, "type"))
+    {:ok, c} = ACP.V1.ToolCallContentWrapper.from_json(Map.delete(map, "type"))
     {:ok, {:content, c}}
   end
 
   def from_json(%{"type" => "diff"} = map) do
-    {:ok, d} = ACP.Diff.from_json(Map.delete(map, "type"))
+    {:ok, d} = ACP.V1.Diff.from_json(Map.delete(map, "type"))
     {:ok, {:diff, d}}
   end
 
   def from_json(%{"type" => "terminal"} = map) do
-    {:ok, t} = ACP.ToolCallTerminal.from_json(Map.delete(map, "type"))
+    {:ok, t} = ACP.V1.ToolCallTerminal.from_json(Map.delete(map, "type"))
     {:ok, {:terminal, t}}
   end
 end
 
-defmodule ACP.ToolCallUpdateFields do
+defmodule ACP.V1.ToolCallUpdateFields do
   @moduledoc "Optional fields that can be updated in a tool call."
 
   @type t :: %__MODULE__{
-          kind: ACP.ToolKind.t() | nil,
-          status: ACP.ToolCallStatus.t() | nil,
+          kind: ACP.V1.ToolKind.t() | nil,
+          status: ACP.V1.ToolCallStatus.t() | nil,
           title: String.t() | nil,
-          content: [ACP.ToolCallContent.t()] | nil,
-          locations: [ACP.ToolCallLocation.t()] | nil,
+          content: [ACP.V1.ToolCallContent.t()] | nil,
+          locations: [ACP.V1.ToolCallLocation.t()] | nil,
           raw_input: any() | nil,
           raw_output: any() | nil
         }
@@ -230,18 +230,21 @@ defmodule ACP.ToolCallUpdateFields do
 
   def to_json(%__MODULE__{} = f) do
     map = %{}
-    map = if f.kind, do: Map.put(map, "kind", ACP.ToolKind.encode(f.kind)), else: map
-    map = if f.status, do: Map.put(map, "status", ACP.ToolCallStatus.encode(f.status)), else: map
+    map = if f.kind, do: Map.put(map, "kind", ACP.V1.ToolKind.encode(f.kind)), else: map
+
+    map =
+      if f.status, do: Map.put(map, "status", ACP.V1.ToolCallStatus.encode(f.status)), else: map
+
     map = if f.title, do: Map.put(map, "title", f.title), else: map
 
     map =
       if f.content,
-        do: Map.put(map, "content", Enum.map(f.content, &ACP.ToolCallContent.to_json/1)),
+        do: Map.put(map, "content", Enum.map(f.content, &ACP.V1.ToolCallContent.to_json/1)),
         else: map
 
     map =
       if f.locations,
-        do: Map.put(map, "locations", Enum.map(f.locations, &ACP.ToolCallLocation.to_json/1)),
+        do: Map.put(map, "locations", Enum.map(f.locations, &ACP.V1.ToolCallLocation.to_json/1)),
         else: map
 
     map = if f.raw_input, do: Map.put(map, "rawInput", f.raw_input), else: map
@@ -255,12 +258,12 @@ defmodule ACP.ToolCallUpdateFields do
        kind:
          case Map.get(map, "kind") do
            nil -> nil
-           k -> ACP.ToolKind.decode(k)
+           k -> ACP.V1.ToolKind.decode(k)
          end,
        status:
          case Map.get(map, "status") do
            nil -> nil
-           s -> ACP.ToolCallStatus.decode(s)
+           s -> ACP.V1.ToolCallStatus.decode(s)
          end,
        title: Map.get(map, "title"),
        content:
@@ -270,7 +273,7 @@ defmodule ACP.ToolCallUpdateFields do
 
            list ->
              Enum.map(list, fn c ->
-               {:ok, v} = ACP.ToolCallContent.from_json(c)
+               {:ok, v} = ACP.V1.ToolCallContent.from_json(c)
                v
              end)
          end,
@@ -281,7 +284,7 @@ defmodule ACP.ToolCallUpdateFields do
 
            list ->
              Enum.map(list, fn l ->
-               {:ok, v} = ACP.ToolCallLocation.from_json(l)
+               {:ok, v} = ACP.V1.ToolCallLocation.from_json(l)
                v
              end)
          end,
@@ -291,12 +294,12 @@ defmodule ACP.ToolCallUpdateFields do
   end
 end
 
-defmodule ACP.ToolCallUpdate do
+defmodule ACP.V1.ToolCallUpdate do
   @moduledoc "An update to an existing tool call."
 
   @type t :: %__MODULE__{
           tool_call_id: String.t(),
-          fields: ACP.ToolCallUpdateFields.t(),
+          fields: ACP.V1.ToolCallUpdateFields.t(),
           meta: map() | nil
         }
 
@@ -309,13 +312,13 @@ defmodule ACP.ToolCallUpdate do
 
   def to_json(%__MODULE__{} = u) do
     # flatten fields into top-level map (like serde flatten)
-    map = ACP.ToolCallUpdateFields.to_json(u.fields)
+    map = ACP.V1.ToolCallUpdateFields.to_json(u.fields)
     map = Map.put(map, "toolCallId", u.tool_call_id)
     if u.meta, do: Map.put(map, "_meta", u.meta), else: map
   end
 
   def from_json(map) when is_map(map) do
-    {:ok, fields} = ACP.ToolCallUpdateFields.from_json(map)
+    {:ok, fields} = ACP.V1.ToolCallUpdateFields.from_json(map)
 
     {:ok,
      %__MODULE__{
@@ -326,16 +329,16 @@ defmodule ACP.ToolCallUpdate do
   end
 end
 
-defmodule ACP.ToolCall do
+defmodule ACP.V1.ToolCall do
   @moduledoc "Represents a tool call that the language model has requested."
 
   @type t :: %__MODULE__{
           tool_call_id: String.t(),
           title: String.t(),
-          kind: ACP.ToolKind.t(),
-          status: ACP.ToolCallStatus.t(),
-          content: [ACP.ToolCallContent.t()],
-          locations: [ACP.ToolCallLocation.t()],
+          kind: ACP.V1.ToolKind.t(),
+          status: ACP.V1.ToolCallStatus.t(),
+          content: [ACP.V1.ToolCallContent.t()],
+          locations: [ACP.V1.ToolCallLocation.t()],
           raw_input: any() | nil,
           raw_output: any() | nil,
           meta: map() | nil
@@ -358,7 +361,7 @@ defmodule ACP.ToolCall do
     %__MODULE__{tool_call_id: tool_call_id, title: title}
   end
 
-  def update(%__MODULE__{} = tc, %ACP.ToolCallUpdateFields{} = fields) do
+  def update(%__MODULE__{} = tc, %ACP.V1.ToolCallUpdateFields{} = fields) do
     tc = if fields.title, do: %{tc | title: fields.title}, else: tc
     tc = if fields.kind, do: %{tc | kind: fields.kind}, else: tc
     tc = if fields.status, do: %{tc | status: fields.status}, else: tc
@@ -373,23 +376,23 @@ defmodule ACP.ToolCall do
     map = %{"toolCallId" => tc.tool_call_id, "title" => tc.title}
 
     map =
-      if not ACP.ToolKind.is_default?(tc.kind),
-        do: Map.put(map, "kind", ACP.ToolKind.encode(tc.kind)),
+      if not ACP.V1.ToolKind.is_default?(tc.kind),
+        do: Map.put(map, "kind", ACP.V1.ToolKind.encode(tc.kind)),
         else: map
 
     map =
-      if not ACP.ToolCallStatus.is_default?(tc.status),
-        do: Map.put(map, "status", ACP.ToolCallStatus.encode(tc.status)),
+      if not ACP.V1.ToolCallStatus.is_default?(tc.status),
+        do: Map.put(map, "status", ACP.V1.ToolCallStatus.encode(tc.status)),
         else: map
 
     map =
       if tc.content != [],
-        do: Map.put(map, "content", Enum.map(tc.content, &ACP.ToolCallContent.to_json/1)),
+        do: Map.put(map, "content", Enum.map(tc.content, &ACP.V1.ToolCallContent.to_json/1)),
         else: map
 
     map =
       if tc.locations != [],
-        do: Map.put(map, "locations", Enum.map(tc.locations, &ACP.ToolCallLocation.to_json/1)),
+        do: Map.put(map, "locations", Enum.map(tc.locations, &ACP.V1.ToolCallLocation.to_json/1)),
         else: map
 
     map = if tc.raw_input, do: Map.put(map, "rawInput", tc.raw_input), else: map
@@ -405,12 +408,12 @@ defmodule ACP.ToolCall do
        kind:
          case Map.get(map, "kind") do
            nil -> :other
-           k -> ACP.ToolKind.decode(k)
+           k -> ACP.V1.ToolKind.decode(k)
          end,
        status:
          case Map.get(map, "status") do
            nil -> :pending
-           s -> ACP.ToolCallStatus.decode(s)
+           s -> ACP.V1.ToolCallStatus.decode(s)
          end,
        content:
          case Map.get(map, "content") do
@@ -419,7 +422,7 @@ defmodule ACP.ToolCall do
 
            list ->
              Enum.map(list, fn c ->
-               {:ok, v} = ACP.ToolCallContent.from_json(c)
+               {:ok, v} = ACP.V1.ToolCallContent.from_json(c)
                v
              end)
          end,
@@ -430,7 +433,7 @@ defmodule ACP.ToolCall do
 
            list ->
              Enum.map(list, fn l ->
-               {:ok, v} = ACP.ToolCallLocation.from_json(l)
+               {:ok, v} = ACP.V1.ToolCallLocation.from_json(l)
                v
              end)
          end,
@@ -441,9 +444,9 @@ defmodule ACP.ToolCall do
   end
 
   def to_update(%__MODULE__{} = tc) do
-    %ACP.ToolCallUpdate{
+    %ACP.V1.ToolCallUpdate{
       tool_call_id: tc.tool_call_id,
-      fields: %ACP.ToolCallUpdateFields{
+      fields: %ACP.V1.ToolCallUpdateFields{
         kind: tc.kind,
         status: tc.status,
         title: tc.title,
@@ -457,18 +460,18 @@ defmodule ACP.ToolCall do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ToolCall do
-  def encode(tc, opts), do: ACP.ToolCall.to_json(tc) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ToolCall do
+  def encode(tc, opts), do: ACP.V1.ToolCall.to_json(tc) |> Jason.Encoder.encode(opts)
 end
 
-defimpl Jason.Encoder, for: ACP.ToolCallUpdate do
-  def encode(u, opts), do: ACP.ToolCallUpdate.to_json(u) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ToolCallUpdate do
+  def encode(u, opts), do: ACP.V1.ToolCallUpdate.to_json(u) |> Jason.Encoder.encode(opts)
 end
 
-defimpl Jason.Encoder, for: ACP.Diff do
-  def encode(d, opts), do: ACP.Diff.to_json(d) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.Diff do
+  def encode(d, opts), do: ACP.V1.Diff.to_json(d) |> Jason.Encoder.encode(opts)
 end
 
-defimpl Jason.Encoder, for: ACP.ToolCallLocation do
-  def encode(l, opts), do: ACP.ToolCallLocation.to_json(l) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ToolCallLocation do
+  def encode(l, opts), do: ACP.V1.ToolCallLocation.to_json(l) |> Jason.Encoder.encode(opts)
 end

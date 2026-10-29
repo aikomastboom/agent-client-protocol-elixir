@@ -1,4 +1,4 @@
-defmodule ACP.ClientSideConnection do
+defmodule ACP.V1.ClientSideConnection do
   @moduledoc """
   A client-side connection to an agent.
 
@@ -15,7 +15,7 @@ defmodule ACP.ClientSideConnection do
   Start a client-side connection.
 
   Options:
-    - `:handler` - Module implementing ACP.Client behaviour (handles incoming agent requests)
+    - `:handler` - Module implementing ACP.V1.Client behaviour (handles incoming agent requests)
     - `:handler_state` - State passed to handler
     - `:input` - Input IO device (default: :stdio)
     - `:output` - Output IO device (default: :stdio)
@@ -23,7 +23,7 @@ defmodule ACP.ClientSideConnection do
   """
   def start_link(opts) do
     conn_opts =
-      Keyword.merge(opts, side: ACP.ClientSide)
+      Keyword.merge(opts, side: ACP.V1.ClientSide)
 
     case ACP.Connection.start_link(conn_opts) do
       {:ok, pid} -> {:ok, %__MODULE__{conn: pid}}
@@ -37,31 +37,31 @@ defmodule ACP.ClientSideConnection do
   # Agent interface - requests sent to the agent
 
   def initialize(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "initialize", ACP.InitializeRequest.to_json(req))
+    ACP.Connection.request(c.conn, "initialize", ACP.V1.InitializeRequest.to_json(req))
   end
 
   def authenticate(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "authenticate", ACP.AuthenticateRequest.to_json(req))
+    ACP.Connection.request(c.conn, "authenticate", ACP.V1.AuthenticateRequest.to_json(req))
   end
 
   def new_session(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "session/new", ACP.NewSessionRequest.to_json(req))
+    ACP.Connection.request(c.conn, "session/new", ACP.V1.NewSessionRequest.to_json(req))
   end
 
   def load_session(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "session/load", ACP.LoadSessionRequest.to_json(req))
+    ACP.Connection.request(c.conn, "session/load", ACP.V1.LoadSessionRequest.to_json(req))
   end
 
   def set_session_mode(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "session/set_mode", ACP.SetSessionModeRequest.to_json(req))
+    ACP.Connection.request(c.conn, "session/set_mode", ACP.V1.SetSessionModeRequest.to_json(req))
   end
 
   def prompt(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "session/prompt", ACP.PromptRequest.to_json(req))
+    ACP.Connection.request(c.conn, "session/prompt", ACP.V1.PromptRequest.to_json(req))
   end
 
   def cancel(%__MODULE__{} = c, notif) do
-    ACP.Connection.notify(c.conn, "session/cancel", ACP.CancelNotification.to_json(notif))
+    ACP.Connection.notify(c.conn, "session/cancel", ACP.V1.CancelNotification.to_json(notif))
   end
 
   def ext_method(%__MODULE__{} = c, req) do

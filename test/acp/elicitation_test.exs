@@ -1,9 +1,9 @@
 defmodule ACP.ElicitationTest do
   use ExUnit.Case, async: true
 
-  describe "ACP.ElicitationCreateRequest.to_json" do
+  describe "ACP.V1.ElicitationCreateRequest.to_json" do
     test "form mode emits correct keys" do
-      req = %ACP.ElicitationCreateRequest{
+      req = %ACP.V1.ElicitationCreateRequest{
         session_id: "s1",
         tool_call_id: "tc1",
         mode: "form",
@@ -14,7 +14,7 @@ defmodule ACP.ElicitationTest do
         }
       }
 
-      assert ACP.ElicitationCreateRequest.to_json(req) == %{
+      assert ACP.V1.ElicitationCreateRequest.to_json(req) == %{
                "sessionId" => "s1",
                "toolCallId" => "tc1",
                "mode" => "form",
@@ -27,7 +27,7 @@ defmodule ACP.ElicitationTest do
     end
 
     test "url mode emits elicitationId and url" do
-      req = %ACP.ElicitationCreateRequest{
+      req = %ACP.V1.ElicitationCreateRequest{
         session_id: "s1",
         mode: "url",
         message: "Authorize access",
@@ -35,7 +35,7 @@ defmodule ACP.ElicitationTest do
         url: "https://example.com/auth"
       }
 
-      assert ACP.ElicitationCreateRequest.to_json(req) == %{
+      assert ACP.V1.ElicitationCreateRequest.to_json(req) == %{
                "sessionId" => "s1",
                "mode" => "url",
                "message" => "Authorize access",
@@ -45,13 +45,13 @@ defmodule ACP.ElicitationTest do
     end
 
     test "optional fields omitted when nil" do
-      req = %ACP.ElicitationCreateRequest{
+      req = %ACP.V1.ElicitationCreateRequest{
         session_id: "s1",
         mode: "form",
         message: "Need more input"
       }
 
-      json = ACP.ElicitationCreateRequest.to_json(req)
+      json = ACP.V1.ElicitationCreateRequest.to_json(req)
       refute Map.has_key?(json, "toolCallId")
       refute Map.has_key?(json, "requestedSchema")
       refute Map.has_key?(json, "elicitationId")
@@ -60,7 +60,7 @@ defmodule ACP.ElicitationTest do
     end
   end
 
-  describe "ACP.ClientSide.decode_request elicitation/create" do
+  describe "ACP.V1.ClientSide.decode_request elicitation/create" do
     test "routes to {:elicitation_create, req}" do
       params = %{
         "sessionId" => "s1",
@@ -71,7 +71,7 @@ defmodule ACP.ElicitationTest do
       }
 
       {:ok, {:elicitation_create, req}} =
-        ACP.ClientSide.decode_request("elicitation/create", params)
+        ACP.V1.ClientSide.decode_request("elicitation/create", params)
 
       assert req.session_id == "s1"
       assert req.tool_call_id == "tc1"
@@ -81,7 +81,7 @@ defmodule ACP.ElicitationTest do
     end
 
     test "returns method_not_found for unknown methods" do
-      {:error, err} = ACP.ClientSide.decode_request("unknown", %{})
+      {:error, err} = ACP.V1.ClientSide.decode_request("unknown", %{})
       assert err.code == -32601
     end
   end

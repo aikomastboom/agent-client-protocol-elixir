@@ -3,7 +3,7 @@
 
 # --- Session Notification ---
 
-defmodule ACP.SessionNotification do
+defmodule ACP.V1.SessionNotification do
   @moduledoc "Notification about a session update."
 
   @enforce_keys [:session_id, :update]
@@ -12,7 +12,7 @@ defmodule ACP.SessionNotification do
   def new(session_id, update), do: %__MODULE__{session_id: session_id, update: update}
 
   def to_json(%__MODULE__{} = n) do
-    map = %{"sessionId" => n.session_id, "update" => ACP.SessionUpdate.to_json(n.update)}
+    map = %{"sessionId" => n.session_id, "update" => ACP.V1.SessionUpdate.to_json(n.update)}
     if n.meta, do: Map.put(map, "_meta", n.meta), else: map
   end
 
@@ -20,138 +20,138 @@ defmodule ACP.SessionNotification do
     {:ok,
      %__MODULE__{
        session_id: sid,
-       update: ACP.SessionUpdate.from_json(update),
+       update: ACP.V1.SessionUpdate.from_json(update),
        meta: Map.get(map, "_meta")
      }}
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionNotification do
-  def encode(val, opts), do: ACP.SessionNotification.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionNotification do
+  def encode(val, opts), do: ACP.V1.SessionNotification.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Session Update (tagged union by "sessionUpdate" field) ---
 
-defmodule ACP.SessionUpdate do
+defmodule ACP.V1.SessionUpdate do
   @moduledoc "Tagged union representing different session update types."
 
   @type t ::
-          {:user_message_chunk, ACP.ContentChunk.t()}
-          | {:agent_message_chunk, ACP.ContentChunk.t()}
-          | {:agent_thought_chunk, ACP.ContentChunk.t()}
-          | {:tool_call, ACP.ToolCall.t()}
-          | {:tool_call_update, ACP.ToolCallUpdate.t()}
-          | {:plan, ACP.Plan.t()}
-          | {:available_commands_update, ACP.AvailableCommandsUpdate.t()}
-          | {:current_mode_update, ACP.CurrentModeUpdate.t()}
-          | {:config_option_update, ACP.ConfigOptionUpdate.t()}
-          | {:session_info_update, ACP.SessionInfoUpdate.t()}
-          | {:usage_update, ACP.UsageUpdate.t()}
+          {:user_message_chunk, ACP.V1.ContentChunk.t()}
+          | {:agent_message_chunk, ACP.V1.ContentChunk.t()}
+          | {:agent_thought_chunk, ACP.V1.ContentChunk.t()}
+          | {:tool_call, ACP.V1.ToolCall.t()}
+          | {:tool_call_update, ACP.V1.ToolCallUpdate.t()}
+          | {:plan, ACP.V1.Plan.t()}
+          | {:available_commands_update, ACP.V1.AvailableCommandsUpdate.t()}
+          | {:current_mode_update, ACP.V1.CurrentModeUpdate.t()}
+          | {:config_option_update, ACP.V1.ConfigOptionUpdate.t()}
+          | {:session_info_update, ACP.V1.SessionInfoUpdate.t()}
+          | {:usage_update, ACP.V1.UsageUpdate.t()}
 
   def to_json({:user_message_chunk, chunk}) do
-    ACP.ContentChunk.to_json(chunk) |> Map.put("sessionUpdate", "user_message_chunk")
+    ACP.V1.ContentChunk.to_json(chunk) |> Map.put("sessionUpdate", "user_message_chunk")
   end
 
   def to_json({:agent_message_chunk, chunk}) do
-    ACP.ContentChunk.to_json(chunk) |> Map.put("sessionUpdate", "agent_message_chunk")
+    ACP.V1.ContentChunk.to_json(chunk) |> Map.put("sessionUpdate", "agent_message_chunk")
   end
 
   def to_json({:agent_thought_chunk, chunk}) do
-    ACP.ContentChunk.to_json(chunk) |> Map.put("sessionUpdate", "agent_thought_chunk")
+    ACP.V1.ContentChunk.to_json(chunk) |> Map.put("sessionUpdate", "agent_thought_chunk")
   end
 
   def to_json({:tool_call, tc}) do
-    ACP.ToolCall.to_json(tc) |> Map.put("sessionUpdate", "tool_call")
+    ACP.V1.ToolCall.to_json(tc) |> Map.put("sessionUpdate", "tool_call")
   end
 
   def to_json({:tool_call_update, tcu}) do
-    ACP.ToolCallUpdate.to_json(tcu) |> Map.put("sessionUpdate", "tool_call_update")
+    ACP.V1.ToolCallUpdate.to_json(tcu) |> Map.put("sessionUpdate", "tool_call_update")
   end
 
   def to_json({:plan, plan}) do
-    ACP.Plan.to_json(plan) |> Map.put("sessionUpdate", "plan")
+    ACP.V1.Plan.to_json(plan) |> Map.put("sessionUpdate", "plan")
   end
 
   def to_json({:available_commands_update, acu}) do
-    ACP.AvailableCommandsUpdate.to_json(acu)
+    ACP.V1.AvailableCommandsUpdate.to_json(acu)
     |> Map.put("sessionUpdate", "available_commands_update")
   end
 
   def to_json({:current_mode_update, cmu}) do
-    ACP.CurrentModeUpdate.to_json(cmu) |> Map.put("sessionUpdate", "current_mode_update")
+    ACP.V1.CurrentModeUpdate.to_json(cmu) |> Map.put("sessionUpdate", "current_mode_update")
   end
 
   def to_json({:config_option_update, cou}) do
-    ACP.ConfigOptionUpdate.to_json(cou) |> Map.put("sessionUpdate", "config_option_update")
+    ACP.V1.ConfigOptionUpdate.to_json(cou) |> Map.put("sessionUpdate", "config_option_update")
   end
 
   def to_json({:session_info_update, siu}) do
-    ACP.SessionInfoUpdate.to_json(siu) |> Map.put("sessionUpdate", "session_info_update")
+    ACP.V1.SessionInfoUpdate.to_json(siu) |> Map.put("sessionUpdate", "session_info_update")
   end
 
   def to_json({:usage_update, uu}) do
-    ACP.UsageUpdate.to_json(uu) |> Map.put("sessionUpdate", "usage_update")
+    ACP.V1.UsageUpdate.to_json(uu) |> Map.put("sessionUpdate", "usage_update")
   end
 
   def from_json(%{"sessionUpdate" => "user_message_chunk"} = map) do
-    {:ok, chunk} = ACP.ContentChunk.from_json(map)
+    {:ok, chunk} = ACP.V1.ContentChunk.from_json(map)
     {:user_message_chunk, chunk}
   end
 
   def from_json(%{"sessionUpdate" => "agent_message_chunk"} = map) do
-    {:ok, chunk} = ACP.ContentChunk.from_json(map)
+    {:ok, chunk} = ACP.V1.ContentChunk.from_json(map)
     {:agent_message_chunk, chunk}
   end
 
   def from_json(%{"sessionUpdate" => "agent_thought_chunk"} = map) do
-    {:ok, chunk} = ACP.ContentChunk.from_json(map)
+    {:ok, chunk} = ACP.V1.ContentChunk.from_json(map)
     {:agent_thought_chunk, chunk}
   end
 
   def from_json(%{"sessionUpdate" => "tool_call"} = map) do
-    {:ok, tc} = ACP.ToolCall.from_json(map)
+    {:ok, tc} = ACP.V1.ToolCall.from_json(map)
     {:tool_call, tc}
   end
 
   def from_json(%{"sessionUpdate" => "tool_call_update"} = map) do
-    {:ok, tcu} = ACP.ToolCallUpdate.from_json(map)
+    {:ok, tcu} = ACP.V1.ToolCallUpdate.from_json(map)
     {:tool_call_update, tcu}
   end
 
   def from_json(%{"sessionUpdate" => "plan"} = map) do
-    {:ok, plan} = ACP.Plan.from_json(map)
+    {:ok, plan} = ACP.V1.Plan.from_json(map)
     {:plan, plan}
   end
 
   def from_json(%{"sessionUpdate" => "available_commands_update"} = map) do
-    {:ok, acu} = ACP.AvailableCommandsUpdate.from_json(map)
+    {:ok, acu} = ACP.V1.AvailableCommandsUpdate.from_json(map)
     {:available_commands_update, acu}
   end
 
   def from_json(%{"sessionUpdate" => "current_mode_update"} = map) do
-    {:ok, cmu} = ACP.CurrentModeUpdate.from_json(map)
+    {:ok, cmu} = ACP.V1.CurrentModeUpdate.from_json(map)
     {:current_mode_update, cmu}
   end
 
   def from_json(%{"sessionUpdate" => "config_option_update"} = map) do
-    {:ok, cou} = ACP.ConfigOptionUpdate.from_json(map)
+    {:ok, cou} = ACP.V1.ConfigOptionUpdate.from_json(map)
     {:config_option_update, cou}
   end
 
   def from_json(%{"sessionUpdate" => "session_info_update"} = map) do
-    {:ok, siu} = ACP.SessionInfoUpdate.from_json(map)
+    {:ok, siu} = ACP.V1.SessionInfoUpdate.from_json(map)
     {:session_info_update, siu}
   end
 
   def from_json(%{"sessionUpdate" => "usage_update"} = map) do
-    {:ok, uu} = ACP.UsageUpdate.from_json(map)
+    {:ok, uu} = ACP.V1.UsageUpdate.from_json(map)
     {:usage_update, uu}
   end
 end
 
 # --- Content Chunk ---
 
-defmodule ACP.ContentChunk do
+defmodule ACP.V1.ContentChunk do
   @moduledoc "A chunk of content in a session update."
 
   @enforce_keys [:content]
@@ -162,23 +162,23 @@ defmodule ACP.ContentChunk do
   def new(content), do: %__MODULE__{content: content}
 
   def to_json(%__MODULE__{} = c) do
-    map = %{"content" => ACP.ContentBlock.to_json(c.content)}
+    map = %{"content" => ACP.V1.ContentBlock.to_json(c.content)}
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
   end
 
   def from_json(map) when is_map(map) do
-    {:ok, content} = ACP.ContentBlock.from_json(Map.get(map, "content", map))
+    {:ok, content} = ACP.V1.ContentBlock.from_json(Map.get(map, "content", map))
     {:ok, %__MODULE__{content: content, meta: Map.get(map, "_meta")}}
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ContentChunk do
-  def encode(val, opts), do: ACP.ContentChunk.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ContentChunk do
+  def encode(val, opts), do: ACP.V1.ContentChunk.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Current Mode Update ---
 
-defmodule ACP.CurrentModeUpdate do
+defmodule ACP.V1.CurrentModeUpdate do
   @moduledoc "Update indicating the current mode has changed."
 
   @enforce_keys [:current_mode_id]
@@ -202,13 +202,13 @@ defmodule ACP.CurrentModeUpdate do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.CurrentModeUpdate do
-  def encode(val, opts), do: ACP.CurrentModeUpdate.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.CurrentModeUpdate do
+  def encode(val, opts), do: ACP.V1.CurrentModeUpdate.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Usage Update ---
 
-defmodule ACP.UsageUpdate do
+defmodule ACP.V1.UsageUpdate do
   @moduledoc """
   Update describing token usage for the current context.
 
@@ -266,25 +266,25 @@ defmodule ACP.UsageUpdate do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.UsageUpdate do
-  def encode(val, opts), do: ACP.UsageUpdate.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.UsageUpdate do
+  def encode(val, opts), do: ACP.V1.UsageUpdate.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Available Commands Update ---
 
-defmodule ACP.AvailableCommandsUpdate do
+defmodule ACP.V1.AvailableCommandsUpdate do
   @moduledoc "Update indicating the set of available commands has changed."
 
   @enforce_keys [:available_commands]
   defstruct [:available_commands, :meta]
 
-  @type t :: %__MODULE__{available_commands: [ACP.AvailableCommand.t()], meta: map() | nil}
+  @type t :: %__MODULE__{available_commands: [ACP.V1.AvailableCommand.t()], meta: map() | nil}
 
   def new(cmds), do: %__MODULE__{available_commands: cmds}
 
   def to_json(%__MODULE__{} = a) do
     map = %{
-      "availableCommands" => Enum.map(a.available_commands, &ACP.AvailableCommand.to_json/1)
+      "availableCommands" => Enum.map(a.available_commands, &ACP.V1.AvailableCommand.to_json/1)
     }
 
     if a.meta, do: Map.put(map, "_meta", a.meta), else: map
@@ -295,7 +295,7 @@ defmodule ACP.AvailableCommandsUpdate do
      %__MODULE__{
        available_commands:
          Enum.map(Map.get(map, "availableCommands", []), fn c ->
-           {:ok, v} = ACP.AvailableCommand.from_json(c)
+           {:ok, v} = ACP.V1.AvailableCommand.from_json(c)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -303,14 +303,14 @@ defmodule ACP.AvailableCommandsUpdate do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.AvailableCommandsUpdate do
+defimpl Jason.Encoder, for: ACP.V1.AvailableCommandsUpdate do
   def encode(val, opts),
-    do: ACP.AvailableCommandsUpdate.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.AvailableCommandsUpdate.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Available Command ---
 
-defmodule ACP.AvailableCommand do
+defmodule ACP.V1.AvailableCommand do
   @moduledoc "A command available to the user."
 
   @enforce_keys [:name, :description]
@@ -319,7 +319,7 @@ defmodule ACP.AvailableCommand do
   @type t :: %__MODULE__{
           name: String.t(),
           description: String.t(),
-          input: ACP.AvailableCommandInput.t() | nil,
+          input: ACP.V1.AvailableCommandInput.t() | nil,
           meta: map() | nil
         }
 
@@ -329,7 +329,9 @@ defmodule ACP.AvailableCommand do
     map = %{"name" => c.name, "description" => c.description}
 
     map =
-      if c.input, do: Map.put(map, "input", ACP.AvailableCommandInput.to_json(c.input)), else: map
+      if c.input,
+        do: Map.put(map, "input", ACP.V1.AvailableCommandInput.to_json(c.input)),
+        else: map
 
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
   end
@@ -342,39 +344,39 @@ defmodule ACP.AvailableCommand do
        input:
          case Map.get(map, "input") do
            nil -> nil
-           i -> ACP.AvailableCommandInput.from_json(i)
+           i -> ACP.V1.AvailableCommandInput.from_json(i)
          end,
        meta: Map.get(map, "_meta")
      }}
   end
 end
 
-defimpl Jason.Encoder, for: ACP.AvailableCommand do
-  def encode(val, opts), do: ACP.AvailableCommand.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.AvailableCommand do
+  def encode(val, opts), do: ACP.V1.AvailableCommand.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Available Command Input (untagged union, currently only Unstructured) ---
 
-defmodule ACP.AvailableCommandInput do
+defmodule ACP.V1.AvailableCommandInput do
   @moduledoc "Input specification for an available command."
 
-  @type t :: {:unstructured, ACP.UnstructuredCommandInput.t()}
+  @type t :: {:unstructured, ACP.V1.UnstructuredCommandInput.t()}
 
-  def to_json({:unstructured, input}), do: ACP.UnstructuredCommandInput.to_json(input)
+  def to_json({:unstructured, input}), do: ACP.V1.UnstructuredCommandInput.to_json(input)
 
   def from_json(%{"hint" => _} = map) do
-    {:ok, val} = ACP.UnstructuredCommandInput.from_json(map)
+    {:ok, val} = ACP.V1.UnstructuredCommandInput.from_json(map)
     {:unstructured, val}
   end
 
   def from_json(map) when is_map(map) do
-    {:unstructured, ACP.UnstructuredCommandInput.new(Map.get(map, "hint", ""))}
+    {:unstructured, ACP.V1.UnstructuredCommandInput.new(Map.get(map, "hint", ""))}
   end
 end
 
 # --- Unstructured Command Input ---
 
-defmodule ACP.UnstructuredCommandInput do
+defmodule ACP.V1.UnstructuredCommandInput do
   @moduledoc "Unstructured input with a hint."
 
   @enforce_keys [:hint]
@@ -394,14 +396,14 @@ defmodule ACP.UnstructuredCommandInput do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.UnstructuredCommandInput do
+defimpl Jason.Encoder, for: ACP.V1.UnstructuredCommandInput do
   def encode(val, opts),
-    do: ACP.UnstructuredCommandInput.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.UnstructuredCommandInput.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Request Permission Request ---
 
-defmodule ACP.RequestPermissionRequest do
+defmodule ACP.V1.RequestPermissionRequest do
   @moduledoc "Request from the agent asking the client for permission to perform a tool call."
 
   @enforce_keys [:session_id, :tool_call, :options]
@@ -414,15 +416,15 @@ defmodule ACP.RequestPermissionRequest do
   def to_json(%__MODULE__{} = r) do
     map = %{
       "sessionId" => r.session_id,
-      "toolCall" => ACP.ToolCallUpdate.to_json(r.tool_call),
-      "options" => Enum.map(r.options, &ACP.PermissionOption.to_json/1)
+      "toolCall" => ACP.V1.ToolCallUpdate.to_json(r.tool_call),
+      "options" => Enum.map(r.options, &ACP.V1.PermissionOption.to_json/1)
     }
 
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
   end
 
   def from_json(%{"sessionId" => sid, "toolCall" => tc, "options" => opts} = map) do
-    {:ok, tc_val} = ACP.ToolCallUpdate.from_json(tc)
+    {:ok, tc_val} = ACP.V1.ToolCallUpdate.from_json(tc)
 
     {:ok,
      %__MODULE__{
@@ -430,7 +432,7 @@ defmodule ACP.RequestPermissionRequest do
        tool_call: tc_val,
        options:
          Enum.map(opts, fn o ->
-           {:ok, v} = ACP.PermissionOption.from_json(o)
+           {:ok, v} = ACP.V1.PermissionOption.from_json(o)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -438,14 +440,14 @@ defmodule ACP.RequestPermissionRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.RequestPermissionRequest do
+defimpl Jason.Encoder, for: ACP.V1.RequestPermissionRequest do
   def encode(val, opts),
-    do: ACP.RequestPermissionRequest.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.RequestPermissionRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Permission Option ---
 
-defmodule ACP.PermissionOption do
+defmodule ACP.V1.PermissionOption do
   @moduledoc "An option presented to the user for a permission request."
 
   @enforce_keys [:option_id, :name, :kind]
@@ -457,7 +459,7 @@ defmodule ACP.PermissionOption do
     map = %{
       "optionId" => p.option_id,
       "name" => p.name,
-      "kind" => ACP.PermissionOptionKind.to_json(p.kind)
+      "kind" => ACP.V1.PermissionOptionKind.to_json(p.kind)
     }
 
     if p.meta, do: Map.put(map, "_meta", p.meta), else: map
@@ -468,19 +470,19 @@ defmodule ACP.PermissionOption do
      %__MODULE__{
        option_id: oid,
        name: name,
-       kind: ACP.PermissionOptionKind.from_json(kind),
+       kind: ACP.V1.PermissionOptionKind.from_json(kind),
        meta: Map.get(map, "_meta")
      }}
   end
 end
 
-defimpl Jason.Encoder, for: ACP.PermissionOption do
-  def encode(val, opts), do: ACP.PermissionOption.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.PermissionOption do
+  def encode(val, opts), do: ACP.V1.PermissionOption.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Permission Option Kind ---
 
-defmodule ACP.PermissionOptionKind do
+defmodule ACP.V1.PermissionOptionKind do
   @moduledoc "The kind of permission option."
 
   @type t :: :allow_once | :allow_always | :reject_once | :reject_always
@@ -498,7 +500,7 @@ end
 
 # --- Request Permission Response ---
 
-defmodule ACP.RequestPermissionResponse do
+defmodule ACP.V1.RequestPermissionResponse do
   @moduledoc "Response from the client to a permission request."
 
   @enforce_keys [:outcome]
@@ -507,48 +509,48 @@ defmodule ACP.RequestPermissionResponse do
   def new(outcome), do: %__MODULE__{outcome: outcome}
 
   def to_json(%__MODULE__{} = r) do
-    map = %{"outcome" => ACP.RequestPermissionOutcome.to_json(r.outcome)}
+    map = %{"outcome" => ACP.V1.RequestPermissionOutcome.to_json(r.outcome)}
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
   end
 
   def from_json(%{"outcome" => outcome} = map) do
     {:ok,
      %__MODULE__{
-       outcome: ACP.RequestPermissionOutcome.from_json(outcome),
+       outcome: ACP.V1.RequestPermissionOutcome.from_json(outcome),
        meta: Map.get(map, "_meta")
      }}
   end
 end
 
-defimpl Jason.Encoder, for: ACP.RequestPermissionResponse do
+defimpl Jason.Encoder, for: ACP.V1.RequestPermissionResponse do
   def encode(val, opts),
-    do: ACP.RequestPermissionResponse.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.RequestPermissionResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Request Permission Outcome (tagged by "outcome") ---
 
-defmodule ACP.RequestPermissionOutcome do
+defmodule ACP.V1.RequestPermissionOutcome do
   @moduledoc "The outcome of a permission request."
 
-  @type t :: :cancelled | {:selected, ACP.SelectedPermissionOutcome.t()}
+  @type t :: :cancelled | {:selected, ACP.V1.SelectedPermissionOutcome.t()}
 
   def to_json(:cancelled), do: %{"outcome" => "cancelled"}
 
   def to_json({:selected, s}) do
-    ACP.SelectedPermissionOutcome.to_json(s) |> Map.put("outcome", "selected")
+    ACP.V1.SelectedPermissionOutcome.to_json(s) |> Map.put("outcome", "selected")
   end
 
   def from_json(%{"outcome" => "cancelled"}), do: :cancelled
 
   def from_json(%{"outcome" => "selected"} = map) do
-    {:ok, val} = ACP.SelectedPermissionOutcome.from_json(map)
+    {:ok, val} = ACP.V1.SelectedPermissionOutcome.from_json(map)
     {:selected, val}
   end
 end
 
 # --- Selected Permission Outcome ---
 
-defmodule ACP.SelectedPermissionOutcome do
+defmodule ACP.V1.SelectedPermissionOutcome do
   @moduledoc "A selected permission outcome containing the chosen option."
 
   @enforce_keys [:option_id]
@@ -572,14 +574,14 @@ defmodule ACP.SelectedPermissionOutcome do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SelectedPermissionOutcome do
+defimpl Jason.Encoder, for: ACP.V1.SelectedPermissionOutcome do
   def encode(val, opts),
-    do: ACP.SelectedPermissionOutcome.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.SelectedPermissionOutcome.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Write Text File Request ---
 
-defmodule ACP.WriteTextFileRequest do
+defmodule ACP.V1.WriteTextFileRequest do
   @moduledoc "Request to write a text file."
 
   @enforce_keys [:session_id, :path, :content]
@@ -599,13 +601,14 @@ defmodule ACP.WriteTextFileRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.WriteTextFileRequest do
-  def encode(val, opts), do: ACP.WriteTextFileRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.WriteTextFileRequest do
+  def encode(val, opts),
+    do: ACP.V1.WriteTextFileRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Write Text File Response ---
 
-defmodule ACP.WriteTextFileResponse do
+defmodule ACP.V1.WriteTextFileResponse do
   @moduledoc "Response to a write text file request."
 
   defstruct [:meta]
@@ -621,13 +624,14 @@ defmodule ACP.WriteTextFileResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.WriteTextFileResponse do
-  def encode(val, opts), do: ACP.WriteTextFileResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.WriteTextFileResponse do
+  def encode(val, opts),
+    do: ACP.V1.WriteTextFileResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Read Text File Request ---
 
-defmodule ACP.ReadTextFileRequest do
+defmodule ACP.V1.ReadTextFileRequest do
   @moduledoc "Request to read a text file."
 
   @enforce_keys [:session_id, :path]
@@ -654,13 +658,13 @@ defmodule ACP.ReadTextFileRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ReadTextFileRequest do
-  def encode(val, opts), do: ACP.ReadTextFileRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ReadTextFileRequest do
+  def encode(val, opts), do: ACP.V1.ReadTextFileRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Read Text File Response ---
 
-defmodule ACP.ReadTextFileResponse do
+defmodule ACP.V1.ReadTextFileResponse do
   @moduledoc "Response to a read text file request."
 
   @enforce_keys [:content]
@@ -678,13 +682,14 @@ defmodule ACP.ReadTextFileResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ReadTextFileResponse do
-  def encode(val, opts), do: ACP.ReadTextFileResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ReadTextFileResponse do
+  def encode(val, opts),
+    do: ACP.V1.ReadTextFileResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Create Terminal Request ---
 
-defmodule ACP.CreateTerminalRequest do
+defmodule ACP.V1.CreateTerminalRequest do
   @moduledoc "Request to create a terminal session."
 
   @enforce_keys [:session_id, :command]
@@ -698,7 +703,7 @@ defmodule ACP.CreateTerminalRequest do
     map = %{"sessionId" => r.session_id, "command" => r.command}
     map = Map.put(map, "args", r.args || [])
     map = if r.cwd, do: Map.put(map, "cwd", r.cwd), else: map
-    map = Map.put(map, "env", Enum.map(r.env || [], &ACP.EnvVariable.to_json/1))
+    map = Map.put(map, "env", Enum.map(r.env || [], &ACP.V1.EnvVariable.to_json/1))
     map = if r.timeout_ms, do: Map.put(map, "timeoutMs", r.timeout_ms), else: map
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
   end
@@ -712,7 +717,7 @@ defmodule ACP.CreateTerminalRequest do
        cwd: Map.get(map, "cwd"),
        env:
          Enum.map(Map.get(map, "env", []), fn e ->
-           {:ok, v} = ACP.EnvVariable.from_json(e)
+           {:ok, v} = ACP.V1.EnvVariable.from_json(e)
            v
          end),
        timeout_ms: Map.get(map, "timeoutMs"),
@@ -721,13 +726,14 @@ defmodule ACP.CreateTerminalRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.CreateTerminalRequest do
-  def encode(val, opts), do: ACP.CreateTerminalRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.CreateTerminalRequest do
+  def encode(val, opts),
+    do: ACP.V1.CreateTerminalRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Create Terminal Response ---
 
-defmodule ACP.CreateTerminalResponse do
+defmodule ACP.V1.CreateTerminalResponse do
   @moduledoc "Response to a create terminal request."
 
   @enforce_keys [:terminal_id]
@@ -745,13 +751,14 @@ defmodule ACP.CreateTerminalResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.CreateTerminalResponse do
-  def encode(val, opts), do: ACP.CreateTerminalResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.CreateTerminalResponse do
+  def encode(val, opts),
+    do: ACP.V1.CreateTerminalResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Terminal Output Request ---
 
-defmodule ACP.TerminalOutputRequest do
+defmodule ACP.V1.TerminalOutputRequest do
   @moduledoc "Request to get output from a terminal."
 
   @enforce_keys [:session_id, :terminal_id]
@@ -771,13 +778,14 @@ defmodule ACP.TerminalOutputRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.TerminalOutputRequest do
-  def encode(val, opts), do: ACP.TerminalOutputRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.TerminalOutputRequest do
+  def encode(val, opts),
+    do: ACP.V1.TerminalOutputRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Terminal Output Response ---
 
-defmodule ACP.TerminalOutputResponse do
+defmodule ACP.V1.TerminalOutputResponse do
   @moduledoc "Response containing terminal output."
 
   @enforce_keys [:output]
@@ -790,7 +798,7 @@ defmodule ACP.TerminalOutputResponse do
 
     map =
       if r.exit_status,
-        do: Map.put(map, "exitStatus", ACP.TerminalExitStatus.to_json(r.exit_status)),
+        do: Map.put(map, "exitStatus", ACP.V1.TerminalExitStatus.to_json(r.exit_status)),
         else: map
 
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
@@ -806,7 +814,7 @@ defmodule ACP.TerminalOutputResponse do
              nil
 
            es ->
-             {:ok, v} = ACP.TerminalExitStatus.from_json(es)
+             {:ok, v} = ACP.V1.TerminalExitStatus.from_json(es)
              v
          end,
        meta: Map.get(map, "_meta")
@@ -814,13 +822,14 @@ defmodule ACP.TerminalOutputResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.TerminalOutputResponse do
-  def encode(val, opts), do: ACP.TerminalOutputResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.TerminalOutputResponse do
+  def encode(val, opts),
+    do: ACP.V1.TerminalOutputResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Terminal Exit Status ---
 
-defmodule ACP.TerminalExitStatus do
+defmodule ACP.V1.TerminalExitStatus do
   @moduledoc "Exit status of a terminal command."
 
   defstruct [:exit_code, :meta]
@@ -837,13 +846,13 @@ defmodule ACP.TerminalExitStatus do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.TerminalExitStatus do
-  def encode(val, opts), do: ACP.TerminalExitStatus.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.TerminalExitStatus do
+  def encode(val, opts), do: ACP.V1.TerminalExitStatus.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Release Terminal Request ---
 
-defmodule ACP.ReleaseTerminalRequest do
+defmodule ACP.V1.ReleaseTerminalRequest do
   @moduledoc "Request to release a terminal."
 
   @enforce_keys [:session_id, :terminal_id]
@@ -863,13 +872,14 @@ defmodule ACP.ReleaseTerminalRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ReleaseTerminalRequest do
-  def encode(val, opts), do: ACP.ReleaseTerminalRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ReleaseTerminalRequest do
+  def encode(val, opts),
+    do: ACP.V1.ReleaseTerminalRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Release Terminal Response ---
 
-defmodule ACP.ReleaseTerminalResponse do
+defmodule ACP.V1.ReleaseTerminalResponse do
   @moduledoc "Response to a release terminal request."
 
   defstruct [:meta]
@@ -885,14 +895,14 @@ defmodule ACP.ReleaseTerminalResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ReleaseTerminalResponse do
+defimpl Jason.Encoder, for: ACP.V1.ReleaseTerminalResponse do
   def encode(val, opts),
-    do: ACP.ReleaseTerminalResponse.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.ReleaseTerminalResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Wait For Terminal Exit Request ---
 
-defmodule ACP.WaitForTerminalExitRequest do
+defmodule ACP.V1.WaitForTerminalExitRequest do
   @moduledoc "Request to wait for a terminal command to exit."
 
   @enforce_keys [:session_id, :terminal_id]
@@ -912,14 +922,14 @@ defmodule ACP.WaitForTerminalExitRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.WaitForTerminalExitRequest do
+defimpl Jason.Encoder, for: ACP.V1.WaitForTerminalExitRequest do
   def encode(val, opts),
-    do: ACP.WaitForTerminalExitRequest.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.WaitForTerminalExitRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Wait For Terminal Exit Response ---
 
-defmodule ACP.WaitForTerminalExitResponse do
+defmodule ACP.V1.WaitForTerminalExitResponse do
   @moduledoc "Response containing terminal exit status."
 
   @enforce_keys [:exit_status]
@@ -928,24 +938,24 @@ defmodule ACP.WaitForTerminalExitResponse do
   def new(exit_status), do: %__MODULE__{exit_status: exit_status}
 
   def to_json(%__MODULE__{} = r) do
-    map = %{"exitStatus" => ACP.TerminalExitStatus.to_json(r.exit_status)}
+    map = %{"exitStatus" => ACP.V1.TerminalExitStatus.to_json(r.exit_status)}
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
   end
 
   def from_json(%{"exitStatus" => es} = map) do
-    {:ok, es_val} = ACP.TerminalExitStatus.from_json(es)
+    {:ok, es_val} = ACP.V1.TerminalExitStatus.from_json(es)
     {:ok, %__MODULE__{exit_status: es_val, meta: Map.get(map, "_meta")}}
   end
 end
 
-defimpl Jason.Encoder, for: ACP.WaitForTerminalExitResponse do
+defimpl Jason.Encoder, for: ACP.V1.WaitForTerminalExitResponse do
   def encode(val, opts),
-    do: ACP.WaitForTerminalExitResponse.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.WaitForTerminalExitResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Kill Terminal Command Request ---
 
-defmodule ACP.KillTerminalCommandRequest do
+defmodule ACP.V1.KillTerminalCommandRequest do
   @moduledoc "Request to kill a terminal command."
 
   @enforce_keys [:session_id, :terminal_id]
@@ -965,14 +975,14 @@ defmodule ACP.KillTerminalCommandRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.KillTerminalCommandRequest do
+defimpl Jason.Encoder, for: ACP.V1.KillTerminalCommandRequest do
   def encode(val, opts),
-    do: ACP.KillTerminalCommandRequest.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.KillTerminalCommandRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Kill Terminal Command Response ---
 
-defmodule ACP.KillTerminalCommandResponse do
+defmodule ACP.V1.KillTerminalCommandResponse do
   @moduledoc "Response to a kill terminal command request."
 
   defstruct [:meta]
@@ -988,14 +998,14 @@ defmodule ACP.KillTerminalCommandResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.KillTerminalCommandResponse do
+defimpl Jason.Encoder, for: ACP.V1.KillTerminalCommandResponse do
   def encode(val, opts),
-    do: ACP.KillTerminalCommandResponse.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.KillTerminalCommandResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Elicitation Capabilities ---
 
-defmodule ACP.ElicitationFormCapability do
+defmodule ACP.V1.ElicitationFormCapability do
   @moduledoc "Form-mode elicitation capability supported by the client."
 
   defstruct [:meta]
@@ -1013,12 +1023,12 @@ defmodule ACP.ElicitationFormCapability do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ElicitationFormCapability do
+defimpl Jason.Encoder, for: ACP.V1.ElicitationFormCapability do
   def encode(val, opts),
-    do: ACP.ElicitationFormCapability.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.ElicitationFormCapability.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.ElicitationUrlCapability do
+defmodule ACP.V1.ElicitationUrlCapability do
   @moduledoc "URL-mode elicitation capability supported by the client."
 
   defstruct [:meta]
@@ -1036,12 +1046,12 @@ defmodule ACP.ElicitationUrlCapability do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ElicitationUrlCapability do
+defimpl Jason.Encoder, for: ACP.V1.ElicitationUrlCapability do
   def encode(val, opts),
-    do: ACP.ElicitationUrlCapability.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.ElicitationUrlCapability.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
-defmodule ACP.ElicitationCapability do
+defmodule ACP.V1.ElicitationCapability do
   @moduledoc "Elicitation capabilities supported by the client."
 
   defstruct form: nil,
@@ -1049,8 +1059,8 @@ defmodule ACP.ElicitationCapability do
             meta: nil
 
   @type t :: %__MODULE__{
-          form: ACP.ElicitationFormCapability.t() | nil,
-          url: ACP.ElicitationUrlCapability.t() | nil,
+          form: ACP.V1.ElicitationFormCapability.t() | nil,
+          url: ACP.V1.ElicitationUrlCapability.t() | nil,
           meta: map() | nil
         }
 
@@ -1061,11 +1071,11 @@ defmodule ACP.ElicitationCapability do
 
     map =
       if c.form,
-        do: Map.put(map, "form", ACP.ElicitationFormCapability.to_json(c.form)),
+        do: Map.put(map, "form", ACP.V1.ElicitationFormCapability.to_json(c.form)),
         else: map
 
     map =
-      if c.url, do: Map.put(map, "url", ACP.ElicitationUrlCapability.to_json(c.url)), else: map
+      if c.url, do: Map.put(map, "url", ACP.V1.ElicitationUrlCapability.to_json(c.url)), else: map
 
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
   end
@@ -1079,7 +1089,7 @@ defmodule ACP.ElicitationCapability do
              nil
 
            form ->
-             {:ok, value} = ACP.ElicitationFormCapability.from_json(form)
+             {:ok, value} = ACP.V1.ElicitationFormCapability.from_json(form)
              value
          end,
        url:
@@ -1088,7 +1098,7 @@ defmodule ACP.ElicitationCapability do
              nil
 
            url ->
-             {:ok, value} = ACP.ElicitationUrlCapability.from_json(url)
+             {:ok, value} = ACP.V1.ElicitationUrlCapability.from_json(url)
              value
          end,
        meta: Map.get(map, "_meta")
@@ -1096,13 +1106,14 @@ defmodule ACP.ElicitationCapability do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ElicitationCapability do
-  def encode(val, opts), do: ACP.ElicitationCapability.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ElicitationCapability do
+  def encode(val, opts),
+    do: ACP.V1.ElicitationCapability.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Elicitation Create Request ---
 
-defmodule ACP.ElicitationCreateRequest do
+defmodule ACP.V1.ElicitationCreateRequest do
   @moduledoc "Request from the agent asking the client to elicit additional input."
 
   @enforce_keys [:session_id, :mode, :message]
@@ -1155,14 +1166,14 @@ defmodule ACP.ElicitationCreateRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ElicitationCreateRequest do
+defimpl Jason.Encoder, for: ACP.V1.ElicitationCreateRequest do
   def encode(val, opts),
-    do: ACP.ElicitationCreateRequest.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.ElicitationCreateRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Elicitation Create Response ---
 
-defmodule ACP.ElicitationCreateResponse do
+defmodule ACP.V1.ElicitationCreateResponse do
   @moduledoc "Response from the client to an elicitation/create request."
 
   defstruct [:action, :content, :meta]
@@ -1199,14 +1210,14 @@ defmodule ACP.ElicitationCreateResponse do
   defp action_from_json(action), do: {:unknown, action}
 end
 
-defimpl Jason.Encoder, for: ACP.ElicitationCreateResponse do
+defimpl Jason.Encoder, for: ACP.V1.ElicitationCreateResponse do
   def encode(val, opts),
-    do: ACP.ElicitationCreateResponse.to_json(val) |> Jason.Encoder.encode(opts)
+    do: ACP.V1.ElicitationCreateResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Client Capabilities ---
 
-defmodule ACP.ClientCapabilities do
+defmodule ACP.V1.ClientCapabilities do
   @moduledoc "Capabilities declared by the client."
 
   defstruct terminal: false,
@@ -1216,8 +1227,8 @@ defmodule ACP.ClientCapabilities do
 
   @type t :: %__MODULE__{
           terminal: boolean(),
-          file_system: ACP.FileSystemCapability.t() | nil,
-          elicitation: ACP.ElicitationCapability.t() | nil,
+          file_system: ACP.V1.FileSystemCapability.t() | nil,
+          elicitation: ACP.V1.ElicitationCapability.t() | nil,
           meta: map() | nil
         }
 
@@ -1228,12 +1239,12 @@ defmodule ACP.ClientCapabilities do
 
     map =
       if c.file_system,
-        do: Map.put(map, "fileSystem", ACP.FileSystemCapability.to_json(c.file_system)),
+        do: Map.put(map, "fileSystem", ACP.V1.FileSystemCapability.to_json(c.file_system)),
         else: map
 
     map =
       if c.elicitation,
-        do: Map.put(map, "elicitation", ACP.ElicitationCapability.to_json(c.elicitation)),
+        do: Map.put(map, "elicitation", ACP.V1.ElicitationCapability.to_json(c.elicitation)),
         else: map
 
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
@@ -1249,7 +1260,7 @@ defmodule ACP.ClientCapabilities do
              nil
 
            fs ->
-             {:ok, v} = ACP.FileSystemCapability.from_json(fs)
+             {:ok, v} = ACP.V1.FileSystemCapability.from_json(fs)
              v
          end,
        elicitation:
@@ -1258,7 +1269,7 @@ defmodule ACP.ClientCapabilities do
              nil
 
            elicitation ->
-             {:ok, v} = ACP.ElicitationCapability.from_json(elicitation)
+             {:ok, v} = ACP.V1.ElicitationCapability.from_json(elicitation)
              v
          end,
        meta: Map.get(map, "_meta")
@@ -1266,13 +1277,13 @@ defmodule ACP.ClientCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.ClientCapabilities do
-  def encode(val, opts), do: ACP.ClientCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.ClientCapabilities do
+  def encode(val, opts), do: ACP.V1.ClientCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- File System Capability ---
 
-defmodule ACP.FileSystemCapability do
+defmodule ACP.V1.FileSystemCapability do
   @moduledoc "File system capabilities supported by the client."
 
   defstruct write_text_file: false,
@@ -1302,25 +1313,26 @@ defmodule ACP.FileSystemCapability do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.FileSystemCapability do
-  def encode(val, opts), do: ACP.FileSystemCapability.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.FileSystemCapability do
+  def encode(val, opts),
+    do: ACP.V1.FileSystemCapability.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # --- Agent Request (routing enum) ---
 
-defmodule ACP.AgentRequest do
+defmodule ACP.V1.AgentRequest do
   @moduledoc "Enum of all possible requests from the agent to the client."
 
   @type t ::
-          {:write_text_file, ACP.WriteTextFileRequest.t()}
-          | {:read_text_file, ACP.ReadTextFileRequest.t()}
-          | {:request_permission, ACP.RequestPermissionRequest.t()}
-          | {:elicitation_create, ACP.ElicitationCreateRequest.t()}
-          | {:create_terminal, ACP.CreateTerminalRequest.t()}
-          | {:terminal_output, ACP.TerminalOutputRequest.t()}
-          | {:release_terminal, ACP.ReleaseTerminalRequest.t()}
-          | {:wait_for_terminal_exit, ACP.WaitForTerminalExitRequest.t()}
-          | {:kill_terminal_command, ACP.KillTerminalCommandRequest.t()}
+          {:write_text_file, ACP.V1.WriteTextFileRequest.t()}
+          | {:read_text_file, ACP.V1.ReadTextFileRequest.t()}
+          | {:request_permission, ACP.V1.RequestPermissionRequest.t()}
+          | {:elicitation_create, ACP.V1.ElicitationCreateRequest.t()}
+          | {:create_terminal, ACP.V1.CreateTerminalRequest.t()}
+          | {:terminal_output, ACP.V1.TerminalOutputRequest.t()}
+          | {:release_terminal, ACP.V1.ReleaseTerminalRequest.t()}
+          | {:wait_for_terminal_exit, ACP.V1.WaitForTerminalExitRequest.t()}
+          | {:kill_terminal_command, ACP.V1.KillTerminalCommandRequest.t()}
           | {:ext_method, ACP.ExtRequest.t()}
 
   def method({:write_text_file, _}), do: "fs/write_text_file"
@@ -1337,29 +1349,29 @@ end
 
 # --- Client Response (routing enum) ---
 
-defmodule ACP.ClientResponse do
+defmodule ACP.V1.ClientResponse do
   @moduledoc "Enum of all possible responses from the client to the agent."
 
   @type t ::
-          {:write_text_file, ACP.WriteTextFileResponse.t()}
-          | {:read_text_file, ACP.ReadTextFileResponse.t()}
-          | {:request_permission, ACP.RequestPermissionResponse.t()}
-          | {:elicitation_create, ACP.ElicitationCreateResponse.t()}
-          | {:create_terminal, ACP.CreateTerminalResponse.t()}
-          | {:terminal_output, ACP.TerminalOutputResponse.t()}
-          | {:release_terminal, ACP.ReleaseTerminalResponse.t()}
-          | {:wait_for_terminal_exit, ACP.WaitForTerminalExitResponse.t()}
-          | {:kill_terminal_command, ACP.KillTerminalCommandResponse.t()}
+          {:write_text_file, ACP.V1.WriteTextFileResponse.t()}
+          | {:read_text_file, ACP.V1.ReadTextFileResponse.t()}
+          | {:request_permission, ACP.V1.RequestPermissionResponse.t()}
+          | {:elicitation_create, ACP.V1.ElicitationCreateResponse.t()}
+          | {:create_terminal, ACP.V1.CreateTerminalResponse.t()}
+          | {:terminal_output, ACP.V1.TerminalOutputResponse.t()}
+          | {:release_terminal, ACP.V1.ReleaseTerminalResponse.t()}
+          | {:wait_for_terminal_exit, ACP.V1.WaitForTerminalExitResponse.t()}
+          | {:kill_terminal_command, ACP.V1.KillTerminalCommandResponse.t()}
           | {:ext_method, ACP.ExtResponse.t()}
 end
 
 # --- Agent Notification (routing enum) ---
 
-defmodule ACP.AgentNotification do
+defmodule ACP.V1.AgentNotification do
   @moduledoc "Enum of all possible notifications from the agent to the client."
 
   @type t ::
-          {:session_notification, ACP.SessionNotification.t()}
+          {:session_notification, ACP.V1.SessionNotification.t()}
           | {:ext_notification, ACP.ExtNotification.t()}
 
   def method({:session_notification, _}), do: "session/update"

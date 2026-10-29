@@ -1,9 +1,9 @@
-defmodule ACP.AgentTypes do
+defmodule ACP.V1.AgentTypes do
   @moduledoc "Agent-side types for the Agent Client Protocol."
 end
 
 # Implementation struct
-defmodule ACP.Implementation do
+defmodule ACP.V1.Implementation do
   @enforce_keys [:name, :version]
   defstruct [:name, :title, :version, :meta]
 
@@ -26,12 +26,12 @@ defmodule ACP.Implementation do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.Implementation do
-  def encode(val, opts), do: ACP.Implementation.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.Implementation do
+  def encode(val, opts), do: ACP.V1.Implementation.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # AuthMethod
-defmodule ACP.AuthMethod do
+defmodule ACP.V1.AuthMethod do
   @enforce_keys [:id, :name]
   defstruct [:id, :name, :description, :meta]
 
@@ -54,19 +54,19 @@ defmodule ACP.AuthMethod do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.AuthMethod do
-  def encode(val, opts), do: ACP.AuthMethod.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.AuthMethod do
+  def encode(val, opts), do: ACP.V1.AuthMethod.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # InitializeRequest
-defmodule ACP.InitializeRequest do
+defmodule ACP.V1.InitializeRequest do
   @enforce_keys [:protocol_version]
   defstruct [:protocol_version, :client_capabilities, :client_info, :meta]
 
   def new(protocol_version) do
     %__MODULE__{
       protocol_version: protocol_version,
-      client_capabilities: ACP.ClientCapabilities.new()
+      client_capabilities: ACP.V1.ClientCapabilities.new()
     }
   end
 
@@ -74,18 +74,18 @@ defmodule ACP.InitializeRequest do
     map = %{"protocolVersion" => r.protocol_version}
 
     map =
-      if r.client_capabilities && r.client_capabilities != ACP.ClientCapabilities.new(),
+      if r.client_capabilities && r.client_capabilities != ACP.V1.ClientCapabilities.new(),
         do:
           Map.put(
             map,
             "clientCapabilities",
-            ACP.ClientCapabilities.to_json(r.client_capabilities)
+            ACP.V1.ClientCapabilities.to_json(r.client_capabilities)
           ),
         else: map
 
     map =
       if r.client_info,
-        do: Map.put(map, "clientInfo", ACP.Implementation.to_json(r.client_info)),
+        do: Map.put(map, "clientInfo", ACP.V1.Implementation.to_json(r.client_info)),
         else: map
 
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
@@ -100,7 +100,7 @@ defmodule ACP.InitializeRequest do
           nil
 
         ci ->
-          {:ok, val} = ACP.Implementation.from_json(ci)
+          {:ok, val} = ACP.V1.Implementation.from_json(ci)
           val
       end
 
@@ -110,10 +110,10 @@ defmodule ACP.InitializeRequest do
        client_capabilities:
          case Map.get(map, "clientCapabilities") do
            nil ->
-             ACP.ClientCapabilities.new()
+             ACP.V1.ClientCapabilities.new()
 
            cc ->
-             {:ok, val} = ACP.ClientCapabilities.from_json(cc)
+             {:ok, val} = ACP.V1.ClientCapabilities.from_json(cc)
              val
          end,
        client_info: client_info,
@@ -122,19 +122,19 @@ defmodule ACP.InitializeRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.InitializeRequest do
-  def encode(val, opts), do: ACP.InitializeRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.InitializeRequest do
+  def encode(val, opts), do: ACP.V1.InitializeRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # InitializeResponse
-defmodule ACP.InitializeResponse do
+defmodule ACP.V1.InitializeResponse do
   @enforce_keys [:protocol_version]
   defstruct [:protocol_version, :agent_capabilities, :auth_methods, :agent_info, :meta]
 
   def new(protocol_version) do
     %__MODULE__{
       protocol_version: protocol_version,
-      agent_capabilities: ACP.AgentCapabilities.new(),
+      agent_capabilities: ACP.V1.AgentCapabilities.new(),
       auth_methods: []
     }
   end
@@ -143,19 +143,23 @@ defmodule ACP.InitializeResponse do
     map = %{"protocolVersion" => r.protocol_version}
 
     map =
-      if r.agent_capabilities && r.agent_capabilities != ACP.AgentCapabilities.new(),
+      if r.agent_capabilities && r.agent_capabilities != ACP.V1.AgentCapabilities.new(),
         do:
-          Map.put(map, "agentCapabilities", ACP.AgentCapabilities.to_json(r.agent_capabilities)),
+          Map.put(
+            map,
+            "agentCapabilities",
+            ACP.V1.AgentCapabilities.to_json(r.agent_capabilities)
+          ),
         else: map
 
     map =
       if r.auth_methods && r.auth_methods != [],
-        do: Map.put(map, "authMethods", Enum.map(r.auth_methods, &ACP.AuthMethod.to_json/1)),
+        do: Map.put(map, "authMethods", Enum.map(r.auth_methods, &ACP.V1.AuthMethod.to_json/1)),
         else: map
 
     map =
       if r.agent_info,
-        do: Map.put(map, "agentInfo", ACP.Implementation.to_json(r.agent_info)),
+        do: Map.put(map, "agentInfo", ACP.V1.Implementation.to_json(r.agent_info)),
         else: map
 
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
@@ -170,16 +174,16 @@ defmodule ACP.InitializeResponse do
        agent_capabilities:
          case Map.get(map, "agentCapabilities") do
            nil ->
-             ACP.AgentCapabilities.new()
+             ACP.V1.AgentCapabilities.new()
 
            ac ->
-             {:ok, val} = ACP.AgentCapabilities.from_json(ac)
+             {:ok, val} = ACP.V1.AgentCapabilities.from_json(ac)
              val
          end,
        auth_methods:
          Map.get(map, "authMethods", [])
          |> Enum.map(fn am ->
-           {:ok, v} = ACP.AuthMethod.from_json(am)
+           {:ok, v} = ACP.V1.AuthMethod.from_json(am)
            v
          end),
        agent_info:
@@ -188,7 +192,7 @@ defmodule ACP.InitializeResponse do
              nil
 
            ai ->
-             {:ok, val} = ACP.Implementation.from_json(ai)
+             {:ok, val} = ACP.V1.Implementation.from_json(ai)
              val
          end,
        meta: Map.get(map, "_meta")
@@ -196,12 +200,12 @@ defmodule ACP.InitializeResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.InitializeResponse do
-  def encode(val, opts), do: ACP.InitializeResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.InitializeResponse do
+  def encode(val, opts), do: ACP.V1.InitializeResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # AuthenticateRequest
-defmodule ACP.AuthenticateRequest do
+defmodule ACP.V1.AuthenticateRequest do
   @enforce_keys [:method_id]
   defstruct [:method_id, :meta]
 
@@ -217,12 +221,12 @@ defmodule ACP.AuthenticateRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.AuthenticateRequest do
-  def encode(val, opts), do: ACP.AuthenticateRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.AuthenticateRequest do
+  def encode(val, opts), do: ACP.V1.AuthenticateRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # AuthenticateResponse
-defmodule ACP.AuthenticateResponse do
+defmodule ACP.V1.AuthenticateResponse do
   defstruct [:meta]
 
   def new, do: %__MODULE__{}
@@ -236,12 +240,13 @@ defmodule ACP.AuthenticateResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.AuthenticateResponse do
-  def encode(val, opts), do: ACP.AuthenticateResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.AuthenticateResponse do
+  def encode(val, opts),
+    do: ACP.V1.AuthenticateResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # NewSessionRequest
-defmodule ACP.NewSessionRequest do
+defmodule ACP.V1.NewSessionRequest do
   @enforce_keys [:cwd]
   defstruct [:cwd, :mcp_servers, :meta]
 
@@ -252,7 +257,7 @@ defmodule ACP.NewSessionRequest do
 
     map =
       if r.mcp_servers && r.mcp_servers != [],
-        do: Map.put(map, "mcpServers", Enum.map(r.mcp_servers, &ACP.McpServer.to_json/1)),
+        do: Map.put(map, "mcpServers", Enum.map(r.mcp_servers, &ACP.V1.McpServer.to_json/1)),
         else: Map.put(map, "mcpServers", [])
 
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
@@ -265,7 +270,7 @@ defmodule ACP.NewSessionRequest do
        mcp_servers:
          Map.get(map, "mcpServers", [])
          |> Enum.map(fn s ->
-           {:ok, v} = ACP.McpServer.from_json(s)
+           {:ok, v} = ACP.V1.McpServer.from_json(s)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -273,12 +278,12 @@ defmodule ACP.NewSessionRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.NewSessionRequest do
-  def encode(val, opts), do: ACP.NewSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.NewSessionRequest do
+  def encode(val, opts), do: ACP.V1.NewSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # NewSessionResponse
-defmodule ACP.NewSessionResponse do
+defmodule ACP.V1.NewSessionResponse do
   @enforce_keys [:session_id]
   defstruct [:session_id, :modes, :models, :config_options, :meta]
 
@@ -286,11 +291,13 @@ defmodule ACP.NewSessionResponse do
 
   def to_json(%__MODULE__{} = r) do
     map = %{"sessionId" => r.session_id}
-    map = if r.modes, do: Map.put(map, "modes", ACP.SessionModeState.to_json(r.modes)), else: map
+
+    map =
+      if r.modes, do: Map.put(map, "modes", ACP.V1.SessionModeState.to_json(r.modes)), else: map
 
     map =
       if r.models,
-        do: Map.put(map, "models", ACP.SessionModelState.to_json(r.models)),
+        do: Map.put(map, "models", ACP.V1.SessionModelState.to_json(r.models)),
         else: map
 
     map =
@@ -299,7 +306,7 @@ defmodule ACP.NewSessionResponse do
           Map.put(
             map,
             "configOptions",
-            Enum.map(r.config_options, &ACP.SessionConfigOption.to_json/1)
+            Enum.map(r.config_options, &ACP.V1.SessionConfigOption.to_json/1)
           ),
         else: map
 
@@ -316,7 +323,7 @@ defmodule ACP.NewSessionResponse do
              nil
 
            m ->
-             {:ok, val} = ACP.SessionModeState.from_json(m)
+             {:ok, val} = ACP.V1.SessionModeState.from_json(m)
              val
          end,
        models:
@@ -325,7 +332,7 @@ defmodule ACP.NewSessionResponse do
              nil
 
            m ->
-             {:ok, val} = ACP.SessionModelState.from_json(m)
+             {:ok, val} = ACP.V1.SessionModelState.from_json(m)
              val
          end,
        config_options:
@@ -335,7 +342,7 @@ defmodule ACP.NewSessionResponse do
 
            opts ->
              Enum.map(opts, fn o ->
-               {:ok, v} = ACP.SessionConfigOption.from_json(o)
+               {:ok, v} = ACP.V1.SessionConfigOption.from_json(o)
                v
              end)
          end,
@@ -344,12 +351,12 @@ defmodule ACP.NewSessionResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.NewSessionResponse do
-  def encode(val, opts), do: ACP.NewSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.NewSessionResponse do
+  def encode(val, opts), do: ACP.V1.NewSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # LoadSessionRequest
-defmodule ACP.LoadSessionRequest do
+defmodule ACP.V1.LoadSessionRequest do
   @enforce_keys [:session_id, :cwd]
   defstruct [:session_id, :cwd, :mcp_servers, :meta]
 
@@ -357,7 +364,7 @@ defmodule ACP.LoadSessionRequest do
 
   def to_json(%__MODULE__{} = r) do
     map = %{"sessionId" => r.session_id, "cwd" => r.cwd}
-    map = Map.put(map, "mcpServers", Enum.map(r.mcp_servers || [], &ACP.McpServer.to_json/1))
+    map = Map.put(map, "mcpServers", Enum.map(r.mcp_servers || [], &ACP.V1.McpServer.to_json/1))
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
   end
 
@@ -369,7 +376,7 @@ defmodule ACP.LoadSessionRequest do
        mcp_servers:
          Map.get(map, "mcpServers", [])
          |> Enum.map(fn s ->
-           {:ok, v} = ACP.McpServer.from_json(s)
+           {:ok, v} = ACP.V1.McpServer.from_json(s)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -377,23 +384,25 @@ defmodule ACP.LoadSessionRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.LoadSessionRequest do
-  def encode(val, opts), do: ACP.LoadSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.LoadSessionRequest do
+  def encode(val, opts), do: ACP.V1.LoadSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # LoadSessionResponse
-defmodule ACP.LoadSessionResponse do
+defmodule ACP.V1.LoadSessionResponse do
   defstruct [:modes, :models, :config_options, :meta]
 
   def new, do: %__MODULE__{}
 
   def to_json(%__MODULE__{} = r) do
     map = %{}
-    map = if r.modes, do: Map.put(map, "modes", ACP.SessionModeState.to_json(r.modes)), else: map
+
+    map =
+      if r.modes, do: Map.put(map, "modes", ACP.V1.SessionModeState.to_json(r.modes)), else: map
 
     map =
       if r.models,
-        do: Map.put(map, "models", ACP.SessionModelState.to_json(r.models)),
+        do: Map.put(map, "models", ACP.V1.SessionModelState.to_json(r.models)),
         else: map
 
     map =
@@ -402,7 +411,7 @@ defmodule ACP.LoadSessionResponse do
           Map.put(
             map,
             "configOptions",
-            Enum.map(r.config_options, &ACP.SessionConfigOption.to_json/1)
+            Enum.map(r.config_options, &ACP.V1.SessionConfigOption.to_json/1)
           ),
         else: map
 
@@ -418,7 +427,7 @@ defmodule ACP.LoadSessionResponse do
              nil
 
            m ->
-             {:ok, val} = ACP.SessionModeState.from_json(m)
+             {:ok, val} = ACP.V1.SessionModeState.from_json(m)
              val
          end,
        models:
@@ -427,7 +436,7 @@ defmodule ACP.LoadSessionResponse do
              nil
 
            m ->
-             {:ok, val} = ACP.SessionModelState.from_json(m)
+             {:ok, val} = ACP.V1.SessionModelState.from_json(m)
              val
          end,
        config_options:
@@ -437,7 +446,7 @@ defmodule ACP.LoadSessionResponse do
 
            opts ->
              Enum.map(opts, fn o ->
-               {:ok, v} = ACP.SessionConfigOption.from_json(o)
+               {:ok, v} = ACP.V1.SessionConfigOption.from_json(o)
                v
              end)
          end,
@@ -446,12 +455,12 @@ defmodule ACP.LoadSessionResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.LoadSessionResponse do
-  def encode(val, opts), do: ACP.LoadSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.LoadSessionResponse do
+  def encode(val, opts), do: ACP.V1.LoadSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # SessionModeState
-defmodule ACP.SessionModeState do
+defmodule ACP.V1.SessionModeState do
   @enforce_keys [:current_mode_id, :available_modes]
   defstruct [:current_mode_id, :available_modes, :meta]
 
@@ -462,7 +471,7 @@ defmodule ACP.SessionModeState do
   def to_json(%__MODULE__{} = s) do
     map = %{
       "currentModeId" => s.current_mode_id,
-      "availableModes" => Enum.map(s.available_modes, &ACP.SessionMode.to_json/1)
+      "availableModes" => Enum.map(s.available_modes, &ACP.V1.SessionMode.to_json/1)
     }
 
     if s.meta, do: Map.put(map, "_meta", s.meta), else: map
@@ -474,7 +483,7 @@ defmodule ACP.SessionModeState do
        current_mode_id: cmid,
        available_modes:
          Enum.map(modes, fn m ->
-           {:ok, v} = ACP.SessionMode.from_json(m)
+           {:ok, v} = ACP.V1.SessionMode.from_json(m)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -482,12 +491,12 @@ defmodule ACP.SessionModeState do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionModeState do
-  def encode(val, opts), do: ACP.SessionModeState.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionModeState do
+  def encode(val, opts), do: ACP.V1.SessionModeState.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # SessionMode
-defmodule ACP.SessionMode do
+defmodule ACP.V1.SessionMode do
   @enforce_keys [:id, :name]
   defstruct [:id, :name, :description, :meta]
 
@@ -510,12 +519,12 @@ defmodule ACP.SessionMode do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionMode do
-  def encode(val, opts), do: ACP.SessionMode.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionMode do
+  def encode(val, opts), do: ACP.V1.SessionMode.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # SetSessionModeRequest
-defmodule ACP.SetSessionModeRequest do
+defmodule ACP.V1.SetSessionModeRequest do
   @enforce_keys [:session_id, :mode_id]
   defstruct [:session_id, :mode_id, :meta]
 
@@ -531,12 +540,13 @@ defmodule ACP.SetSessionModeRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SetSessionModeRequest do
-  def encode(val, opts), do: ACP.SetSessionModeRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SetSessionModeRequest do
+  def encode(val, opts),
+    do: ACP.V1.SetSessionModeRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # SetSessionModeResponse
-defmodule ACP.SetSessionModeResponse do
+defmodule ACP.V1.SetSessionModeResponse do
   defstruct [:meta]
 
   def new, do: %__MODULE__{}
@@ -550,12 +560,13 @@ defmodule ACP.SetSessionModeResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SetSessionModeResponse do
-  def encode(val, opts), do: ACP.SetSessionModeResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SetSessionModeResponse do
+  def encode(val, opts),
+    do: ACP.V1.SetSessionModeResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # PromptRequest
-defmodule ACP.PromptRequest do
+defmodule ACP.V1.PromptRequest do
   @enforce_keys [:session_id, :prompt]
   defstruct [:session_id, :prompt, :meta]
 
@@ -564,7 +575,7 @@ defmodule ACP.PromptRequest do
   def to_json(%__MODULE__{} = r) do
     map = %{
       "sessionId" => r.session_id,
-      "prompt" => Enum.map(r.prompt, &ACP.ContentBlock.to_json/1)
+      "prompt" => Enum.map(r.prompt, &ACP.V1.ContentBlock.to_json/1)
     }
 
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
@@ -576,7 +587,7 @@ defmodule ACP.PromptRequest do
        session_id: sid,
        prompt:
          Enum.map(prompt, fn cb ->
-           {:ok, v} = ACP.ContentBlock.from_json(cb)
+           {:ok, v} = ACP.V1.ContentBlock.from_json(cb)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -584,37 +595,37 @@ defmodule ACP.PromptRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.PromptRequest do
-  def encode(val, opts), do: ACP.PromptRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.PromptRequest do
+  def encode(val, opts), do: ACP.V1.PromptRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # PromptResponse
-defmodule ACP.PromptResponse do
+defmodule ACP.V1.PromptResponse do
   @enforce_keys [:stop_reason]
   defstruct [:stop_reason, :meta]
 
   def new(stop_reason), do: %__MODULE__{stop_reason: stop_reason}
 
   def to_json(%__MODULE__{} = r) do
-    map = %{"stopReason" => ACP.StopReason.to_json(r.stop_reason)}
+    map = %{"stopReason" => ACP.V1.StopReason.to_json(r.stop_reason)}
     if r.meta, do: Map.put(map, "_meta", r.meta), else: map
   end
 
   def from_json(%{"stopReason" => sr} = map) do
     {:ok,
      %__MODULE__{
-       stop_reason: ACP.StopReason.from_json(sr),
+       stop_reason: ACP.V1.StopReason.from_json(sr),
        meta: Map.get(map, "_meta")
      }}
   end
 end
 
-defimpl Jason.Encoder, for: ACP.PromptResponse do
-  def encode(val, opts), do: ACP.PromptResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.PromptResponse do
+  def encode(val, opts), do: ACP.V1.PromptResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # StopReason
-defmodule ACP.StopReason do
+defmodule ACP.V1.StopReason do
   @type t :: :end_turn | :max_tokens | :max_turn_requests | :refusal | :cancelled
 
   def to_json(:end_turn), do: "end_turn"
@@ -631,7 +642,7 @@ defmodule ACP.StopReason do
 end
 
 # CancelNotification
-defmodule ACP.CancelNotification do
+defmodule ACP.V1.CancelNotification do
   @enforce_keys [:session_id]
   defstruct [:session_id, :meta]
 
@@ -647,12 +658,12 @@ defmodule ACP.CancelNotification do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.CancelNotification do
-  def encode(val, opts), do: ACP.CancelNotification.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.CancelNotification do
+  def encode(val, opts), do: ACP.V1.CancelNotification.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # CloseSessionRequest
-defmodule ACP.CloseSessionRequest do
+defmodule ACP.V1.CloseSessionRequest do
   @enforce_keys [:session_id]
   defstruct [:session_id, :meta]
 
@@ -668,12 +679,12 @@ defmodule ACP.CloseSessionRequest do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.CloseSessionRequest do
-  def encode(val, opts), do: ACP.CloseSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.CloseSessionRequest do
+  def encode(val, opts), do: ACP.V1.CloseSessionRequest.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # CloseSessionResponse
-defmodule ACP.CloseSessionResponse do
+defmodule ACP.V1.CloseSessionResponse do
   defstruct [:meta]
 
   def new, do: %__MODULE__{}
@@ -687,12 +698,13 @@ defmodule ACP.CloseSessionResponse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.CloseSessionResponse do
-  def encode(val, opts), do: ACP.CloseSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.CloseSessionResponse do
+  def encode(val, opts),
+    do: ACP.V1.CloseSessionResponse.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # AgentCapabilities
-defmodule ACP.AgentCapabilities do
+defmodule ACP.V1.AgentCapabilities do
   defstruct load_session: false,
             prompt_capabilities: nil,
             mcp_capabilities: nil,
@@ -710,13 +722,13 @@ defmodule ACP.AgentCapabilities do
           Map.put(
             map,
             "promptCapabilities",
-            ACP.PromptCapabilities.to_json(c.prompt_capabilities)
+            ACP.V1.PromptCapabilities.to_json(c.prompt_capabilities)
           ),
         else: map
 
     map =
       if c.mcp_capabilities,
-        do: Map.put(map, "mcpCapabilities", ACP.McpCapabilities.to_json(c.mcp_capabilities)),
+        do: Map.put(map, "mcpCapabilities", ACP.V1.McpCapabilities.to_json(c.mcp_capabilities)),
         else: map
 
     map =
@@ -725,7 +737,7 @@ defmodule ACP.AgentCapabilities do
           Map.put(
             map,
             "sessionCapabilities",
-            ACP.SessionCapabilities.to_json(c.session_capabilities)
+            ACP.V1.SessionCapabilities.to_json(c.session_capabilities)
           ),
         else: map
 
@@ -742,7 +754,7 @@ defmodule ACP.AgentCapabilities do
              nil
 
            pc ->
-             {:ok, v} = ACP.PromptCapabilities.from_json(pc)
+             {:ok, v} = ACP.V1.PromptCapabilities.from_json(pc)
              v
          end,
        mcp_capabilities:
@@ -751,7 +763,7 @@ defmodule ACP.AgentCapabilities do
              nil
 
            mc ->
-             {:ok, v} = ACP.McpCapabilities.from_json(mc)
+             {:ok, v} = ACP.V1.McpCapabilities.from_json(mc)
              v
          end,
        session_capabilities:
@@ -760,7 +772,7 @@ defmodule ACP.AgentCapabilities do
              nil
 
            sc ->
-             {:ok, v} = ACP.SessionCapabilities.from_json(sc)
+             {:ok, v} = ACP.V1.SessionCapabilities.from_json(sc)
              v
          end,
        meta: Map.get(map, "_meta")
@@ -768,12 +780,12 @@ defmodule ACP.AgentCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.AgentCapabilities do
-  def encode(val, opts), do: ACP.AgentCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.AgentCapabilities do
+  def encode(val, opts), do: ACP.V1.AgentCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # PromptCapabilities
-defmodule ACP.PromptCapabilities do
+defmodule ACP.V1.PromptCapabilities do
   defstruct image: false,
             audio: false,
             embedded_context: false,
@@ -797,12 +809,12 @@ defmodule ACP.PromptCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.PromptCapabilities do
-  def encode(val, opts), do: ACP.PromptCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.PromptCapabilities do
+  def encode(val, opts), do: ACP.V1.PromptCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # McpCapabilities
-defmodule ACP.McpCapabilities do
+defmodule ACP.V1.McpCapabilities do
   defstruct http: false,
             sse: false,
             meta: nil
@@ -824,12 +836,12 @@ defmodule ACP.McpCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.McpCapabilities do
-  def encode(val, opts), do: ACP.McpCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.McpCapabilities do
+  def encode(val, opts), do: ACP.V1.McpCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # SessionCapabilities
-defmodule ACP.SessionCapabilities do
+defmodule ACP.V1.SessionCapabilities do
   defstruct modes: false,
             list: nil,
             fork: nil,
@@ -844,22 +856,22 @@ defmodule ACP.SessionCapabilities do
 
     map =
       if c.list,
-        do: Map.put(map, "list", ACP.SessionListCapabilities.to_json(c.list)),
+        do: Map.put(map, "list", ACP.V1.SessionListCapabilities.to_json(c.list)),
         else: map
 
     map =
       if c.fork,
-        do: Map.put(map, "fork", ACP.SessionForkCapabilities.to_json(c.fork)),
+        do: Map.put(map, "fork", ACP.V1.SessionForkCapabilities.to_json(c.fork)),
         else: map
 
     map =
       if c.resume,
-        do: Map.put(map, "resume", ACP.SessionResumeCapabilities.to_json(c.resume)),
+        do: Map.put(map, "resume", ACP.V1.SessionResumeCapabilities.to_json(c.resume)),
         else: map
 
     map =
       if c.close,
-        do: Map.put(map, "close", ACP.SessionCloseCapabilities.to_json(c.close)),
+        do: Map.put(map, "close", ACP.V1.SessionCloseCapabilities.to_json(c.close)),
         else: map
 
     if c.meta, do: Map.put(map, "_meta", c.meta), else: map
@@ -875,7 +887,7 @@ defmodule ACP.SessionCapabilities do
              nil
 
            l ->
-             {:ok, v} = ACP.SessionListCapabilities.from_json(l)
+             {:ok, v} = ACP.V1.SessionListCapabilities.from_json(l)
              v
          end,
        fork:
@@ -884,7 +896,7 @@ defmodule ACP.SessionCapabilities do
              nil
 
            f ->
-             {:ok, v} = ACP.SessionForkCapabilities.from_json(f)
+             {:ok, v} = ACP.V1.SessionForkCapabilities.from_json(f)
              v
          end,
        resume:
@@ -893,7 +905,7 @@ defmodule ACP.SessionCapabilities do
              nil
 
            r ->
-             {:ok, v} = ACP.SessionResumeCapabilities.from_json(r)
+             {:ok, v} = ACP.V1.SessionResumeCapabilities.from_json(r)
              v
          end,
        close:
@@ -902,7 +914,7 @@ defmodule ACP.SessionCapabilities do
              nil
 
            c ->
-             {:ok, v} = ACP.SessionCloseCapabilities.from_json(c)
+             {:ok, v} = ACP.V1.SessionCloseCapabilities.from_json(c)
              v
          end,
        meta: Map.get(map, "_meta")
@@ -910,33 +922,33 @@ defmodule ACP.SessionCapabilities do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.SessionCapabilities do
-  def encode(val, opts), do: ACP.SessionCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.SessionCapabilities do
+  def encode(val, opts), do: ACP.V1.SessionCapabilities.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # McpServer - tagged union: Http, Sse (tagged by "type"), Stdio (untagged)
-defmodule ACP.McpServer do
+defmodule ACP.V1.McpServer do
   @type t ::
-          {:http, ACP.McpServerHttp.t()}
-          | {:sse, ACP.McpServerSse.t()}
-          | {:stdio, ACP.McpServerStdio.t()}
+          {:http, ACP.V1.McpServerHttp.t()}
+          | {:sse, ACP.V1.McpServerSse.t()}
+          | {:stdio, ACP.V1.McpServerStdio.t()}
 
-  def to_json({:http, server}), do: Map.put(ACP.McpServerHttp.to_json(server), "type", "http")
-  def to_json({:sse, server}), do: Map.put(ACP.McpServerSse.to_json(server), "type", "sse")
-  def to_json({:stdio, server}), do: ACP.McpServerStdio.to_json(server)
+  def to_json({:http, server}), do: Map.put(ACP.V1.McpServerHttp.to_json(server), "type", "http")
+  def to_json({:sse, server}), do: Map.put(ACP.V1.McpServerSse.to_json(server), "type", "sse")
+  def to_json({:stdio, server}), do: ACP.V1.McpServerStdio.to_json(server)
 
   def from_json(%{"type" => "http"} = map),
-    do: {:ok, {:http, elem(ACP.McpServerHttp.from_json(map), 1)}}
+    do: {:ok, {:http, elem(ACP.V1.McpServerHttp.from_json(map), 1)}}
 
   def from_json(%{"type" => "sse"} = map),
-    do: {:ok, {:sse, elem(ACP.McpServerSse.from_json(map), 1)}}
+    do: {:ok, {:sse, elem(ACP.V1.McpServerSse.from_json(map), 1)}}
 
   def from_json(map) when is_map(map),
-    do: {:ok, {:stdio, elem(ACP.McpServerStdio.from_json(map), 1)}}
+    do: {:ok, {:stdio, elem(ACP.V1.McpServerStdio.from_json(map), 1)}}
 end
 
 # McpServerHttp
-defmodule ACP.McpServerHttp do
+defmodule ACP.V1.McpServerHttp do
   @enforce_keys [:name, :url]
   defstruct [:name, :url, :headers, :meta]
 
@@ -948,7 +960,7 @@ defmodule ACP.McpServerHttp do
     map = %{
       "name" => s.name,
       "url" => s.url,
-      "headers" => Enum.map(s.headers || [], &ACP.HttpHeader.to_json/1)
+      "headers" => Enum.map(s.headers || [], &ACP.V1.HttpHeader.to_json/1)
     }
 
     if s.meta, do: Map.put(map, "_meta", s.meta), else: map
@@ -962,7 +974,7 @@ defmodule ACP.McpServerHttp do
        headers:
          Map.get(map, "headers", [])
          |> Enum.map(fn h ->
-           {:ok, v} = ACP.HttpHeader.from_json(h)
+           {:ok, v} = ACP.V1.HttpHeader.from_json(h)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -970,13 +982,13 @@ defmodule ACP.McpServerHttp do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.McpServerHttp do
+defimpl Jason.Encoder, for: ACP.V1.McpServerHttp do
   def encode(val, opts),
-    do: Map.put(ACP.McpServerHttp.to_json(val), "type", "http") |> Jason.Encoder.encode(opts)
+    do: Map.put(ACP.V1.McpServerHttp.to_json(val), "type", "http") |> Jason.Encoder.encode(opts)
 end
 
 # McpServerSse
-defmodule ACP.McpServerSse do
+defmodule ACP.V1.McpServerSse do
   @enforce_keys [:name, :url]
   defstruct [:name, :url, :headers, :meta]
 
@@ -988,7 +1000,7 @@ defmodule ACP.McpServerSse do
     map = %{
       "name" => s.name,
       "url" => s.url,
-      "headers" => Enum.map(s.headers || [], &ACP.HttpHeader.to_json/1)
+      "headers" => Enum.map(s.headers || [], &ACP.V1.HttpHeader.to_json/1)
     }
 
     if s.meta, do: Map.put(map, "_meta", s.meta), else: map
@@ -1002,7 +1014,7 @@ defmodule ACP.McpServerSse do
        headers:
          Map.get(map, "headers", [])
          |> Enum.map(fn h ->
-           {:ok, v} = ACP.HttpHeader.from_json(h)
+           {:ok, v} = ACP.V1.HttpHeader.from_json(h)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -1010,13 +1022,13 @@ defmodule ACP.McpServerSse do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.McpServerSse do
+defimpl Jason.Encoder, for: ACP.V1.McpServerSse do
   def encode(val, opts),
-    do: Map.put(ACP.McpServerSse.to_json(val), "type", "sse") |> Jason.Encoder.encode(opts)
+    do: Map.put(ACP.V1.McpServerSse.to_json(val), "type", "sse") |> Jason.Encoder.encode(opts)
 end
 
 # McpServerStdio
-defmodule ACP.McpServerStdio do
+defmodule ACP.V1.McpServerStdio do
   @enforce_keys [:name, :command]
   defstruct [:name, :command, :args, :env, :meta]
 
@@ -1029,7 +1041,7 @@ defmodule ACP.McpServerStdio do
       "name" => s.name,
       "command" => s.command,
       "args" => s.args || [],
-      "env" => Enum.map(s.env || [], &ACP.EnvVariable.to_json/1)
+      "env" => Enum.map(s.env || [], &ACP.V1.EnvVariable.to_json/1)
     }
 
     if s.meta, do: Map.put(map, "_meta", s.meta), else: map
@@ -1044,7 +1056,7 @@ defmodule ACP.McpServerStdio do
        env:
          Map.get(map, "env", [])
          |> Enum.map(fn e ->
-           {:ok, v} = ACP.EnvVariable.from_json(e)
+           {:ok, v} = ACP.V1.EnvVariable.from_json(e)
            v
          end),
        meta: Map.get(map, "_meta")
@@ -1052,12 +1064,12 @@ defmodule ACP.McpServerStdio do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.McpServerStdio do
-  def encode(val, opts), do: ACP.McpServerStdio.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.McpServerStdio do
+  def encode(val, opts), do: ACP.V1.McpServerStdio.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # EnvVariable
-defmodule ACP.EnvVariable do
+defmodule ACP.V1.EnvVariable do
   @enforce_keys [:name, :value]
   defstruct [:name, :value, :meta]
 
@@ -1073,12 +1085,12 @@ defmodule ACP.EnvVariable do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.EnvVariable do
-  def encode(val, opts), do: ACP.EnvVariable.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.EnvVariable do
+  def encode(val, opts), do: ACP.V1.EnvVariable.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # HttpHeader
-defmodule ACP.HttpHeader do
+defmodule ACP.V1.HttpHeader do
   @enforce_keys [:name, :value]
   defstruct [:name, :value, :meta]
 
@@ -1094,24 +1106,24 @@ defmodule ACP.HttpHeader do
   end
 end
 
-defimpl Jason.Encoder, for: ACP.HttpHeader do
-  def encode(val, opts), do: ACP.HttpHeader.to_json(val) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.HttpHeader do
+  def encode(val, opts), do: ACP.V1.HttpHeader.to_json(val) |> Jason.Encoder.encode(opts)
 end
 
 # ClientRequest enum (for routing)
-defmodule ACP.ClientRequest do
+defmodule ACP.V1.ClientRequest do
   @type t ::
-          {:initialize, ACP.InitializeRequest.t()}
-          | {:authenticate, ACP.AuthenticateRequest.t()}
-          | {:new_session, ACP.NewSessionRequest.t()}
-          | {:load_session, ACP.LoadSessionRequest.t()}
-          | {:list_sessions, ACP.ListSessionsRequest.t()}
-          | {:fork_session, ACP.ForkSessionRequest.t()}
-          | {:resume_session, ACP.ResumeSessionRequest.t()}
-          | {:set_session_mode, ACP.SetSessionModeRequest.t()}
-          | {:set_session_config_option, ACP.SetSessionConfigOptionRequest.t()}
-          | {:prompt, ACP.PromptRequest.t()}
-          | {:set_session_model, ACP.SetSessionModelRequest.t()}
+          {:initialize, ACP.V1.InitializeRequest.t()}
+          | {:authenticate, ACP.V1.AuthenticateRequest.t()}
+          | {:new_session, ACP.V1.NewSessionRequest.t()}
+          | {:load_session, ACP.V1.LoadSessionRequest.t()}
+          | {:list_sessions, ACP.V1.ListSessionsRequest.t()}
+          | {:fork_session, ACP.V1.ForkSessionRequest.t()}
+          | {:resume_session, ACP.V1.ResumeSessionRequest.t()}
+          | {:set_session_mode, ACP.V1.SetSessionModeRequest.t()}
+          | {:set_session_config_option, ACP.V1.SetSessionConfigOptionRequest.t()}
+          | {:prompt, ACP.V1.PromptRequest.t()}
+          | {:set_session_model, ACP.V1.SetSessionModelRequest.t()}
           | {:ext_method, ACP.ExtRequest.t()}
 
   def method({:initialize, _}), do: "initialize"
@@ -1129,26 +1141,26 @@ defmodule ACP.ClientRequest do
 end
 
 # AgentResponse enum (for routing)
-defmodule ACP.AgentResponse do
+defmodule ACP.V1.AgentResponse do
   @type t ::
-          {:initialize, ACP.InitializeResponse.t()}
-          | {:authenticate, ACP.AuthenticateResponse.t()}
-          | {:new_session, ACP.NewSessionResponse.t()}
-          | {:load_session, ACP.LoadSessionResponse.t()}
-          | {:list_sessions, ACP.ListSessionsResponse.t()}
-          | {:fork_session, ACP.ForkSessionResponse.t()}
-          | {:resume_session, ACP.ResumeSessionResponse.t()}
-          | {:set_session_mode, ACP.SetSessionModeResponse.t()}
-          | {:set_session_config_option, ACP.SetSessionConfigOptionResponse.t()}
-          | {:prompt, ACP.PromptResponse.t()}
-          | {:set_session_model, ACP.SetSessionModelResponse.t()}
+          {:initialize, ACP.V1.InitializeResponse.t()}
+          | {:authenticate, ACP.V1.AuthenticateResponse.t()}
+          | {:new_session, ACP.V1.NewSessionResponse.t()}
+          | {:load_session, ACP.V1.LoadSessionResponse.t()}
+          | {:list_sessions, ACP.V1.ListSessionsResponse.t()}
+          | {:fork_session, ACP.V1.ForkSessionResponse.t()}
+          | {:resume_session, ACP.V1.ResumeSessionResponse.t()}
+          | {:set_session_mode, ACP.V1.SetSessionModeResponse.t()}
+          | {:set_session_config_option, ACP.V1.SetSessionConfigOptionResponse.t()}
+          | {:prompt, ACP.V1.PromptResponse.t()}
+          | {:set_session_model, ACP.V1.SetSessionModelResponse.t()}
           | {:ext_method, ACP.ExtResponse.t()}
 end
 
 # ClientNotification enum (for routing)
-defmodule ACP.ClientNotification do
+defmodule ACP.V1.ClientNotification do
   @type t ::
-          {:cancel, ACP.CancelNotification.t()}
+          {:cancel, ACP.V1.CancelNotification.t()}
           | {:ext_notification, ACP.ExtNotification.t()}
 
   def method({:cancel, _}), do: "session/cancel"

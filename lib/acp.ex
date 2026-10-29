@@ -11,45 +11,45 @@ defmodule ACP do
 
   - `ACP.ProtocolVersion` - Protocol version negotiation
   - `ACP.Error` - JSON-RPC error codes and constructors
-  - `ACP.ContentBlock` - Content blocks (text, image, audio, resource)
-  - `ACP.Plan` / `ACP.PlanEntry` - Execution plans
-  - `ACP.ToolCall` / `ACP.ToolCallUpdate` - Tool call tracking
+  - `ACP.V1.ContentBlock` - Content blocks (text, image, audio, resource)
+  - `ACP.V1.Plan` / `ACP.V1.PlanEntry` - Execution plans
+  - `ACP.V1.ToolCall` / `ACP.V1.ToolCallUpdate` - Tool call tracking
 
   ## Agent Types
 
-  - `ACP.InitializeRequest` / `ACP.InitializeResponse`
-  - `ACP.AuthenticateRequest` / `ACP.AuthenticateResponse`
-  - `ACP.NewSessionRequest` / `ACP.NewSessionResponse`
-  - `ACP.LoadSessionRequest` / `ACP.LoadSessionResponse`
-  - `ACP.SetSessionModeRequest` / `ACP.SetSessionModeResponse`
-  - `ACP.PromptRequest` / `ACP.PromptResponse`
-  - `ACP.CancelNotification`
-  - `ACP.AgentCapabilities` / `ACP.SessionCapabilities`
+  - `ACP.V1.InitializeRequest` / `ACP.V1.InitializeResponse`
+  - `ACP.V1.AuthenticateRequest` / `ACP.V1.AuthenticateResponse`
+  - `ACP.V1.NewSessionRequest` / `ACP.V1.NewSessionResponse`
+  - `ACP.V1.LoadSessionRequest` / `ACP.V1.LoadSessionResponse`
+  - `ACP.V1.SetSessionModeRequest` / `ACP.V1.SetSessionModeResponse`
+  - `ACP.V1.PromptRequest` / `ACP.V1.PromptResponse`
+  - `ACP.V1.CancelNotification`
+  - `ACP.V1.AgentCapabilities` / `ACP.V1.SessionCapabilities`
 
   ## Client Types
 
-  - `ACP.SessionNotification` / `ACP.SessionUpdate`
-  - `ACP.RequestPermissionRequest` / `ACP.RequestPermissionResponse`
-  - `ACP.WriteTextFileRequest` / `ACP.ReadTextFileRequest`
-  - `ACP.CreateTerminalRequest` / `ACP.TerminalOutputRequest`
-  - `ACP.ClientCapabilities`
+  - `ACP.V1.SessionNotification` / `ACP.V1.SessionUpdate`
+  - `ACP.V1.RequestPermissionRequest` / `ACP.V1.RequestPermissionResponse`
+  - `ACP.V1.WriteTextFileRequest` / `ACP.V1.ReadTextFileRequest`
+  - `ACP.V1.CreateTerminalRequest` / `ACP.V1.TerminalOutputRequest`
+  - `ACP.V1.ClientCapabilities`
 
   ## Behaviours
 
-  - `ACP.Agent` - Agent behaviour (initialize, prompt, cancel, etc.)
-  - `ACP.Client` - Client behaviour (request_permission, session_notification, etc.)
+  - `ACP.V1.Agent` - Agent behaviour (initialize, prompt, cancel, etc.)
+  - `ACP.V1.Client` - Client behaviour (request_permission, session_notification, etc.)
 
   ## Connections
 
   - `ACP.Connection` - Low-level JSON-RPC GenServer
-  - `ACP.ClientSideConnection` - Client-side connection wrapper
-  - `ACP.AgentSideConnection` - Agent-side connection wrapper
+  - `ACP.V1.ClientSideConnection` - Client-side connection wrapper
+  - `ACP.V1.AgentSideConnection` - Agent-side connection wrapper
 
   ## RPC
 
   - `ACP.RPC.Request` / `ACP.RPC.Response` / `ACP.RPC.Notification`
   - `ACP.RPC.JsonRpcMessage` - JSON-RPC 2.0 message wrapper
-  - `ACP.ClientSide` / `ACP.AgentSide` - Side implementations for message decoding
+  - `ACP.V1.ClientSide` / `ACP.V1.AgentSide` - Side implementations for message decoding
 
   ## Stream Broadcast
 

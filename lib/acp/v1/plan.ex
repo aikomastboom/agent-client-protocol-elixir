@@ -1,8 +1,8 @@
-defmodule ACP.Plan do
+defmodule ACP.V1.Plan do
   @moduledoc "Execution plan for complex tasks."
 
   @type t :: %__MODULE__{
-          entries: [ACP.PlanEntry.t()],
+          entries: [ACP.V1.PlanEntry.t()],
           meta: ACP.Ext.meta()
         }
 
@@ -12,7 +12,7 @@ defmodule ACP.Plan do
   def new(entries), do: %__MODULE__{entries: entries}
 
   def to_json(%__MODULE__{} = plan) do
-    map = %{"entries" => Enum.map(plan.entries, &ACP.PlanEntry.to_json/1)}
+    map = %{"entries" => Enum.map(plan.entries, &ACP.V1.PlanEntry.to_json/1)}
     if plan.meta, do: Map.put(map, "_meta", plan.meta), else: map
   end
 
@@ -21,7 +21,7 @@ defmodule ACP.Plan do
      %__MODULE__{
        entries:
          Enum.map(entries, fn e ->
-           {:ok, pe} = ACP.PlanEntry.from_json(e)
+           {:ok, pe} = ACP.V1.PlanEntry.from_json(e)
            pe
          end),
        meta: Map.get(map, "_meta")
@@ -29,13 +29,13 @@ defmodule ACP.Plan do
   end
 end
 
-defmodule ACP.PlanEntry do
+defmodule ACP.V1.PlanEntry do
   @moduledoc "A single entry in the execution plan."
 
   @type t :: %__MODULE__{
           content: String.t(),
-          priority: ACP.PlanEntry.priority(),
-          status: ACP.PlanEntry.status(),
+          priority: ACP.V1.PlanEntry.priority(),
+          status: ACP.V1.PlanEntry.status(),
           meta: ACP.Ext.meta()
         }
 
@@ -86,10 +86,10 @@ defmodule ACP.PlanEntry do
   defp decode_status("completed"), do: :completed
 end
 
-defimpl Jason.Encoder, for: ACP.Plan do
-  def encode(plan, opts), do: ACP.Plan.to_json(plan) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.Plan do
+  def encode(plan, opts), do: ACP.V1.Plan.to_json(plan) |> Jason.Encoder.encode(opts)
 end
 
-defimpl Jason.Encoder, for: ACP.PlanEntry do
-  def encode(entry, opts), do: ACP.PlanEntry.to_json(entry) |> Jason.Encoder.encode(opts)
+defimpl Jason.Encoder, for: ACP.V1.PlanEntry do
+  def encode(entry, opts), do: ACP.V1.PlanEntry.to_json(entry) |> Jason.Encoder.encode(opts)
 end

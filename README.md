@@ -11,10 +11,14 @@ Add `agent_client_protocol` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:agent_client_protocol, "~> 0.1.0"}
+    {:agent_client_protocol, "~> 0.2.0"}
   ]
 end
 ```
+
+## Protocol versions
+
+This library currently implements **ACP v1**. Protocol-version-specific modules live under the `ACP.V1.*` namespace; the bare `ACP.*` namespace is reserved for version-agnostic shared infrastructure (`Connection`, `Error`, `MaybeUndefined`, `ProtocolVersion`, `RPC`, `StreamBroadcast`, `Ext*`, `MessageHandler`, `JSONHelpers`). v2 support is landing incrementally - see `CHANGELOG.md`.
 
 ## Overview
 
@@ -36,11 +40,11 @@ All ACP message types with JSON serialization (`to_json/1` and `from_json/1`):
 
 ### SDK Layer
 
-- **`ACP.Agent`** — Behaviour for implementing an ACP agent with callbacks for `initialize`, `authenticate`, `new_session`, `prompt`, `cancel`, etc.
-- **`ACP.Client`** — Behaviour for implementing an ACP client with callbacks for `request_permission`, `session_notification`, file/terminal operations, etc.
+- **`ACP.V1.Agent`** — Behaviour for implementing an ACP agent with callbacks for `initialize`, `authenticate`, `new_session`, `prompt`, `cancel`, etc.
+- **`ACP.V1.Client`** — Behaviour for implementing an ACP client with callbacks for `request_permission`, `session_notification`, file/terminal operations, etc.
 - **`ACP.Connection`** — GenServer for bidirectional JSON-RPC 2.0 over IO streams with request/response correlation
-- **`ACP.ClientSideConnection`** / **`ACP.AgentSideConnection`** — High-level connection wrappers
-- **`ACP.Side`** — Behaviour with `ClientSide`/`AgentSide` implementations for message routing and decoding
+- **`ACP.V1.ClientSideConnection`** / **`ACP.V1.AgentSideConnection`** — High-level connection wrappers
+- **`ACP.V1.Side`** — Behaviour with `ClientSide`/`AgentSide` implementations for message routing and decoding
 - **`ACP.StreamBroadcast`** — PubSub GenServer for observing protocol messages
 
 ## Usage
@@ -49,27 +53,27 @@ All ACP message types with JSON serialization (`to_json/1` and `from_json/1`):
 
 ```elixir
 defmodule MyAgent do
-  use ACP.Agent
+  use ACP.V1.Agent
 
   @impl true
   def initialize(request) do
-    {:ok, ACP.InitializeResponse.new(ACP.ProtocolVersion.v1())}
+    {:ok, ACP.V1.InitializeResponse.new(ACP.ProtocolVersion.v1())}
   end
 
   @impl true
   def authenticate(_request) do
-    {:ok, ACP.AuthenticateResponse.new()}
+    {:ok, ACP.V1.AuthenticateResponse.new()}
   end
 
   @impl true
   def new_session(request) do
-    {:ok, ACP.NewSessionResponse.new("session-#{System.unique_integer()}")}
+    {:ok, ACP.V1.NewSessionResponse.new("session-#{System.unique_integer()}")}
   end
 
   @impl true
   def prompt(request) do
     # Process the prompt and send session updates...
-    {:ok, ACP.PromptResponse.new(:end_turn)}
+    {:ok, ACP.V1.PromptResponse.new(:end_turn)}
   end
 
   @impl true
@@ -81,13 +85,13 @@ end
 
 ```elixir
 defmodule MyClient do
-  use ACP.Client
+  use ACP.V1.Client
 
   @impl true
   def request_permission(request) do
     # Present permission options to the user...
     option = hd(request.options)
-    {:ok, ACP.RequestPermissionResponse.new({:selected, ACP.SelectedPermissionOutcome.new(option.option_id)})}
+    {:ok, ACP.V1.RequestPermissionResponse.new({:selected, ACP.V1.SelectedPermissionOutcome.new(option.option_id)})}
   end
 
   @impl true
@@ -102,16 +106,16 @@ end
 
 ```elixir
 # Create and serialize a content block
-text = ACP.TextContent.new("Hello, world!")
-json = ACP.ContentBlock.to_json({:text, text})
+text = ACP.V1.TextContent.new("Hello, world!")
+json = ACP.V1.ContentBlock.to_json({:text, text})
 # => %{"type" => "text", "text" => "Hello, world!"}
 
 # Deserialize
-{:ok, {:text, decoded}} = ACP.ContentBlock.from_json(json)
+{:ok, {:text, decoded}} = ACP.V1.ContentBlock.from_json(json)
 
 # Session updates
-update = {:agent_message_chunk, ACP.ContentChunk.new({:text, ACP.TextContent.new("Hi")})}
-json = ACP.SessionUpdate.to_json(update)
+update = {:agent_message_chunk, ACP.V1.ContentChunk.new({:text, ACP.V1.TextContent.new("Hi")})}
+json = ACP.V1.SessionUpdate.to_json(update)
 
 # JSON-RPC messages
 request = %ACP.RPC.Request{id: 1, method: "initialize", params: %{"protocolVersion" => 1}}

@@ -30,7 +30,7 @@ defmodule ACP.Connection do
   Start a connection GenServer.
 
   Options:
-    - `:side` - The side module (ACP.ClientSide or ACP.AgentSide)
+    - `:side` - The side module (ACP.V1.ClientSide or ACP.V1.AgentSide)
     - `:handler` - Module implementing ACP.MessageHandler
     - `:handler_state` - State passed to handler callbacks
     - `:input` - Input IO device or port (default: :stdio)

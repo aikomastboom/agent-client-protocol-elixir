@@ -1,4 +1,4 @@
-defmodule ACP.AgentSideConnection do
+defmodule ACP.V1.AgentSideConnection do
   @moduledoc """
   An agent-side connection to a client.
 
@@ -14,7 +14,7 @@ defmodule ACP.AgentSideConnection do
   Start an agent-side connection.
 
   Options:
-    - `:handler` - Module implementing ACP.Agent behaviour (handles incoming client requests)
+    - `:handler` - Module implementing ACP.V1.Agent behaviour (handles incoming client requests)
     - `:handler_state` - State passed to handler
     - `:input` - Input IO device (default: :stdio)
     - `:output` - Output IO device (default: :stdio)
@@ -22,7 +22,7 @@ defmodule ACP.AgentSideConnection do
   """
   def start_link(opts) do
     conn_opts =
-      Keyword.merge(opts, side: ACP.AgentSide)
+      Keyword.merge(opts, side: ACP.V1.AgentSide)
 
     case ACP.Connection.start_link(conn_opts) do
       {:ok, pid} -> {:ok, %__MODULE__{conn: pid}}
@@ -39,7 +39,7 @@ defmodule ACP.AgentSideConnection do
     ACP.Connection.request(
       c.conn,
       "session/request_permission",
-      ACP.RequestPermissionRequest.to_json(req)
+      ACP.V1.RequestPermissionRequest.to_json(req)
     )
   end
 
@@ -47,10 +47,10 @@ defmodule ACP.AgentSideConnection do
     case ACP.Connection.request(
            c.conn,
            "elicitation/create",
-           ACP.ElicitationCreateRequest.to_json(req),
+           ACP.V1.ElicitationCreateRequest.to_json(req),
            timeout
          ) do
-      {:ok, resp_map} -> ACP.ElicitationCreateResponse.from_json(resp_map)
+      {:ok, resp_map} -> ACP.V1.ElicitationCreateResponse.from_json(resp_map)
       {:error, _} = err -> err
     end
   end
@@ -60,39 +60,43 @@ defmodule ACP.AgentSideConnection do
   end
 
   def write_text_file(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "fs/write_text_file", ACP.WriteTextFileRequest.to_json(req))
+    ACP.Connection.request(c.conn, "fs/write_text_file", ACP.V1.WriteTextFileRequest.to_json(req))
   end
 
   def read_text_file(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "fs/read_text_file", ACP.ReadTextFileRequest.to_json(req))
+    ACP.Connection.request(c.conn, "fs/read_text_file", ACP.V1.ReadTextFileRequest.to_json(req))
   end
 
   def create_terminal(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "terminal/create", ACP.CreateTerminalRequest.to_json(req))
+    ACP.Connection.request(c.conn, "terminal/create", ACP.V1.CreateTerminalRequest.to_json(req))
   end
 
   def terminal_output(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "terminal/output", ACP.TerminalOutputRequest.to_json(req))
+    ACP.Connection.request(c.conn, "terminal/output", ACP.V1.TerminalOutputRequest.to_json(req))
   end
 
   def release_terminal(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "terminal/release", ACP.ReleaseTerminalRequest.to_json(req))
+    ACP.Connection.request(c.conn, "terminal/release", ACP.V1.ReleaseTerminalRequest.to_json(req))
   end
 
   def wait_for_terminal_exit(%__MODULE__{} = c, req) do
     ACP.Connection.request(
       c.conn,
       "terminal/wait_for_exit",
-      ACP.WaitForTerminalExitRequest.to_json(req)
+      ACP.V1.WaitForTerminalExitRequest.to_json(req)
     )
   end
 
   def kill_terminal_command(%__MODULE__{} = c, req) do
-    ACP.Connection.request(c.conn, "terminal/kill", ACP.KillTerminalCommandRequest.to_json(req))
+    ACP.Connection.request(
+      c.conn,
+      "terminal/kill",
+      ACP.V1.KillTerminalCommandRequest.to_json(req)
+    )
   end
 
   def session_notification(%__MODULE__{} = c, notif) do
-    ACP.Connection.notify(c.conn, "session/update", ACP.SessionNotification.to_json(notif))
+    ACP.Connection.notify(c.conn, "session/update", ACP.V1.SessionNotification.to_json(notif))
   end
 
   def ext_method(%__MODULE__{} = c, req) do

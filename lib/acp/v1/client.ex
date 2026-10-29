@@ -1,4 +1,4 @@
-defmodule ACP.Client do
+defmodule ACP.V1.Client do
   @moduledoc """
   Behaviour defining the interface that ACP-compliant clients must implement.
 
@@ -11,39 +11,39 @@ defmodule ACP.Client do
   @type result(t) :: {:ok, t} | {:error, ACP.Error.t()}
 
   @doc "Request permission from the user for a tool call operation."
-  @callback request_permission(ACP.RequestPermissionRequest.t()) ::
-              result(ACP.RequestPermissionResponse.t())
+  @callback request_permission(ACP.V1.RequestPermissionRequest.t()) ::
+              result(ACP.V1.RequestPermissionResponse.t())
 
   @doc "Handle session update notifications from the agent."
-  @callback session_notification(ACP.SessionNotification.t()) :: :ok | {:error, ACP.Error.t()}
+  @callback session_notification(ACP.V1.SessionNotification.t()) :: :ok | {:error, ACP.Error.t()}
 
   @doc "Write content to a text file. Optional."
-  @callback write_text_file(ACP.WriteTextFileRequest.t()) ::
-              result(ACP.WriteTextFileResponse.t())
+  @callback write_text_file(ACP.V1.WriteTextFileRequest.t()) ::
+              result(ACP.V1.WriteTextFileResponse.t())
 
   @doc "Read content from a text file. Optional."
-  @callback read_text_file(ACP.ReadTextFileRequest.t()) ::
-              result(ACP.ReadTextFileResponse.t())
+  @callback read_text_file(ACP.V1.ReadTextFileRequest.t()) ::
+              result(ACP.V1.ReadTextFileResponse.t())
 
   @doc "Create a new terminal and execute a command. Optional."
-  @callback create_terminal(ACP.CreateTerminalRequest.t()) ::
-              result(ACP.CreateTerminalResponse.t())
+  @callback create_terminal(ACP.V1.CreateTerminalRequest.t()) ::
+              result(ACP.V1.CreateTerminalResponse.t())
 
   @doc "Get terminal output and exit status. Optional."
-  @callback terminal_output(ACP.TerminalOutputRequest.t()) ::
-              result(ACP.TerminalOutputResponse.t())
+  @callback terminal_output(ACP.V1.TerminalOutputRequest.t()) ::
+              result(ACP.V1.TerminalOutputResponse.t())
 
   @doc "Release a terminal. Optional."
-  @callback release_terminal(ACP.ReleaseTerminalRequest.t()) ::
-              result(ACP.ReleaseTerminalResponse.t())
+  @callback release_terminal(ACP.V1.ReleaseTerminalRequest.t()) ::
+              result(ACP.V1.ReleaseTerminalResponse.t())
 
   @doc "Wait for terminal command to exit. Optional."
-  @callback wait_for_terminal_exit(ACP.WaitForTerminalExitRequest.t()) ::
-              result(ACP.WaitForTerminalExitResponse.t())
+  @callback wait_for_terminal_exit(ACP.V1.WaitForTerminalExitRequest.t()) ::
+              result(ACP.V1.WaitForTerminalExitResponse.t())
 
   @doc "Kill terminal command without releasing. Optional."
-  @callback kill_terminal_command(ACP.KillTerminalCommandRequest.t()) ::
-              result(ACP.KillTerminalCommandResponse.t())
+  @callback kill_terminal_command(ACP.V1.KillTerminalCommandRequest.t()) ::
+              result(ACP.V1.KillTerminalCommandResponse.t())
 
   @doc "Handle extension method requests. Optional."
   @callback ext_method(ACP.ExtRequest.t()) :: result(ACP.ExtResponse.t())
@@ -65,33 +65,33 @@ defmodule ACP.Client do
 
   defmacro __using__(_opts) do
     quote do
-      @behaviour ACP.Client
+      @behaviour ACP.V1.Client
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def write_text_file(_args), do: {:error, ACP.Error.method_not_found()}
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def read_text_file(_args), do: {:error, ACP.Error.method_not_found()}
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def create_terminal(_args), do: {:error, ACP.Error.method_not_found()}
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def terminal_output(_args), do: {:error, ACP.Error.method_not_found()}
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def release_terminal(_args), do: {:error, ACP.Error.method_not_found()}
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def wait_for_terminal_exit(_args), do: {:error, ACP.Error.method_not_found()}
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def kill_terminal_command(_args), do: {:error, ACP.Error.method_not_found()}
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def ext_method(_args), do: {:ok, %ACP.ExtResponse{value: nil}}
 
-      @impl ACP.Client
+      @impl ACP.V1.Client
       def ext_notification(_args), do: :ok
 
       defoverridable write_text_file: 1,

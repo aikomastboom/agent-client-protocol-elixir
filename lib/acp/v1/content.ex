@@ -1,4 +1,4 @@
-defmodule ACP.Role do
+defmodule ACP.V1.Role do
   @moduledoc "The sender or recipient of messages and data in a conversation."
 
   @type t :: :assistant | :user
@@ -10,11 +10,11 @@ defmodule ACP.Role do
   def decode("user"), do: :user
 end
 
-defmodule ACP.Annotations do
+defmodule ACP.V1.Annotations do
   @moduledoc "Optional annotations for the client."
 
   @type t :: %__MODULE__{
-          audience: [ACP.Role.t()] | nil,
+          audience: [ACP.V1.Role.t()] | nil,
           last_modified: String.t() | nil,
           priority: float() | nil,
           meta: map() | nil
@@ -29,7 +29,7 @@ defmodule ACP.Annotations do
 
     map =
       if a.audience,
-        do: Map.put(map, "audience", Enum.map(a.audience, &ACP.Role.encode/1)),
+        do: Map.put(map, "audience", Enum.map(a.audience, &ACP.V1.Role.encode/1)),
         else: map
 
     map = if a.last_modified, do: Map.put(map, "lastModified", a.last_modified), else: map
@@ -44,7 +44,7 @@ defmodule ACP.Annotations do
        audience:
          case Map.get(map, "audience") do
            nil -> nil
-           list -> Enum.map(list, &ACP.Role.decode/1)
+           list -> Enum.map(list, &ACP.V1.Role.decode/1)
          end,
        last_modified: Map.get(map, "lastModified"),
        priority: Map.get(map, "priority"),
@@ -53,11 +53,11 @@ defmodule ACP.Annotations do
   end
 end
 
-defmodule ACP.TextContent do
+defmodule ACP.V1.TextContent do
   @moduledoc "Text provided to or from an LLM."
 
   @type t :: %__MODULE__{
-          annotations: ACP.Annotations.t() | nil,
+          annotations: ACP.V1.Annotations.t() | nil,
           text: String.t(),
           meta: map() | nil
         }
@@ -72,7 +72,7 @@ defmodule ACP.TextContent do
 
     map =
       if tc.annotations,
-        do: Map.put(map, "annotations", ACP.Annotations.to_json(tc.annotations)),
+        do: Map.put(map, "annotations", ACP.V1.Annotations.to_json(tc.annotations)),
         else: map
 
     if tc.meta, do: Map.put(map, "_meta", tc.meta), else: map
@@ -88,7 +88,7 @@ defmodule ACP.TextContent do
              nil
 
            a ->
-             {:ok, ann} = ACP.Annotations.from_json(a)
+             {:ok, ann} = ACP.V1.Annotations.from_json(a)
              ann
          end,
        meta: Map.get(map, "_meta")
@@ -96,11 +96,11 @@ defmodule ACP.TextContent do
   end
 end
 
-defmodule ACP.ImageContent do
+defmodule ACP.V1.ImageContent do
   @moduledoc "An image provided to or from an LLM."
 
   @type t :: %__MODULE__{
-          annotations: ACP.Annotations.t() | nil,
+          annotations: ACP.V1.Annotations.t() | nil,
           data: String.t(),
           mime_type: String.t(),
           uri: String.t() | nil,
@@ -117,7 +117,7 @@ defmodule ACP.ImageContent do
 
     map =
       if ic.annotations,
-        do: Map.put(map, "annotations", ACP.Annotations.to_json(ic.annotations)),
+        do: Map.put(map, "annotations", ACP.V1.Annotations.to_json(ic.annotations)),
         else: map
 
     map = if ic.uri, do: Map.put(map, "uri", ic.uri), else: map
@@ -135,7 +135,7 @@ defmodule ACP.ImageContent do
              nil
 
            a ->
-             {:ok, ann} = ACP.Annotations.from_json(a)
+             {:ok, ann} = ACP.V1.Annotations.from_json(a)
              ann
          end,
        uri: Map.get(map, "uri"),
@@ -144,11 +144,11 @@ defmodule ACP.ImageContent do
   end
 end
 
-defmodule ACP.AudioContent do
+defmodule ACP.V1.AudioContent do
   @moduledoc "Audio provided to or from an LLM."
 
   @type t :: %__MODULE__{
-          annotations: ACP.Annotations.t() | nil,
+          annotations: ACP.V1.Annotations.t() | nil,
           data: String.t(),
           mime_type: String.t(),
           meta: map() | nil
@@ -164,7 +164,7 @@ defmodule ACP.AudioContent do
 
     map =
       if ac.annotations,
-        do: Map.put(map, "annotations", ACP.Annotations.to_json(ac.annotations)),
+        do: Map.put(map, "annotations", ACP.V1.Annotations.to_json(ac.annotations)),
         else: map
 
     if ac.meta, do: Map.put(map, "_meta", ac.meta), else: map
@@ -181,7 +181,7 @@ defmodule ACP.AudioContent do
              nil
 
            a ->
-             {:ok, ann} = ACP.Annotations.from_json(a)
+             {:ok, ann} = ACP.V1.Annotations.from_json(a)
              ann
          end,
        meta: Map.get(map, "_meta")
@@ -189,7 +189,7 @@ defmodule ACP.AudioContent do
   end
 end
 
-defmodule ACP.TextResourceContents do
+defmodule ACP.V1.TextResourceContents do
   @moduledoc "Text-based resource contents."
 
   @type t :: %__MODULE__{
@@ -221,7 +221,7 @@ defmodule ACP.TextResourceContents do
   end
 end
 
-defmodule ACP.BlobResourceContents do
+defmodule ACP.V1.BlobResourceContents do
   @moduledoc "Binary resource contents."
 
   @type t :: %__MODULE__{
@@ -253,24 +253,24 @@ defmodule ACP.BlobResourceContents do
   end
 end
 
-defmodule ACP.EmbeddedResourceResource do
+defmodule ACP.V1.EmbeddedResourceResource do
   @moduledoc "Resource content that can be embedded in a message (untagged union)."
 
-  @type t :: ACP.TextResourceContents.t() | ACP.BlobResourceContents.t()
+  @type t :: ACP.V1.TextResourceContents.t() | ACP.V1.BlobResourceContents.t()
 
-  def to_json(%ACP.TextResourceContents{} = trc), do: ACP.TextResourceContents.to_json(trc)
-  def to_json(%ACP.BlobResourceContents{} = brc), do: ACP.BlobResourceContents.to_json(brc)
+  def to_json(%ACP.V1.TextResourceContents{} = trc), do: ACP.V1.TextResourceContents.to_json(trc)
+  def to_json(%ACP.V1.BlobResourceContents{} = brc), do: ACP.V1.BlobResourceContents.to_json(brc)
 
-  def from_json(%{"text" => _} = map), do: ACP.TextResourceContents.from_json(map)
-  def from_json(%{"blob" => _} = map), do: ACP.BlobResourceContents.from_json(map)
+  def from_json(%{"text" => _} = map), do: ACP.V1.TextResourceContents.from_json(map)
+  def from_json(%{"blob" => _} = map), do: ACP.V1.BlobResourceContents.from_json(map)
 end
 
-defmodule ACP.EmbeddedResource do
+defmodule ACP.V1.EmbeddedResource do
   @moduledoc "The contents of a resource, embedded into a prompt or tool call result."
 
   @type t :: %__MODULE__{
-          annotations: ACP.Annotations.t() | nil,
-          resource: ACP.EmbeddedResourceResource.t(),
+          annotations: ACP.V1.Annotations.t() | nil,
+          resource: ACP.V1.EmbeddedResourceResource.t(),
           meta: map() | nil
         }
 
@@ -280,18 +280,18 @@ defmodule ACP.EmbeddedResource do
   def new(resource), do: %__MODULE__{resource: resource}
 
   def to_json(%__MODULE__{} = er) do
-    map = %{"resource" => ACP.EmbeddedResourceResource.to_json(er.resource)}
+    map = %{"resource" => ACP.V1.EmbeddedResourceResource.to_json(er.resource)}
 
     map =
       if er.annotations,
-        do: Map.put(map, "annotations", ACP.Annotations.to_json(er.annotations)),
+        do: Map.put(map, "annotations", ACP.V1.Annotations.to_json(er.annotations)),
         else: map
 
     if er.meta, do: Map.put(map, "_meta", er.meta), else: map
   end
 
   def from_json(map) when is_map(map) do
-    {:ok, resource} = ACP.EmbeddedResourceResource.from_json(Map.fetch!(map, "resource"))
+    {:ok, resource} = ACP.V1.EmbeddedResourceResource.from_json(Map.fetch!(map, "resource"))
 
     {:ok,
      %__MODULE__{
@@ -302,7 +302,7 @@ defmodule ACP.EmbeddedResource do
              nil
 
            a ->
-             {:ok, ann} = ACP.Annotations.from_json(a)
+             {:ok, ann} = ACP.V1.Annotations.from_json(a)
              ann
          end,
        meta: Map.get(map, "_meta")
@@ -310,11 +310,11 @@ defmodule ACP.EmbeddedResource do
   end
 end
 
-defmodule ACP.ResourceLink do
+defmodule ACP.V1.ResourceLink do
   @moduledoc "A resource that the server is capable of reading."
 
   @type t :: %__MODULE__{
-          annotations: ACP.Annotations.t() | nil,
+          annotations: ACP.V1.Annotations.t() | nil,
           description: String.t() | nil,
           mime_type: String.t() | nil,
           name: String.t(),
@@ -334,7 +334,7 @@ defmodule ACP.ResourceLink do
 
     map =
       if rl.annotations,
-        do: Map.put(map, "annotations", ACP.Annotations.to_json(rl.annotations)),
+        do: Map.put(map, "annotations", ACP.V1.Annotations.to_json(rl.annotations)),
         else: map
 
     map = if rl.description, do: Map.put(map, "description", rl.description), else: map
@@ -355,7 +355,7 @@ defmodule ACP.ResourceLink do
              nil
 
            a ->
-             {:ok, ann} = ACP.Annotations.from_json(a)
+             {:ok, ann} = ACP.V1.Annotations.from_json(a)
              ann
          end,
        description: Map.get(map, "description"),
@@ -367,15 +367,15 @@ defmodule ACP.ResourceLink do
   end
 end
 
-defmodule ACP.ContentBlock do
+defmodule ACP.V1.ContentBlock do
   @moduledoc "Content blocks represent displayable information in ACP."
 
   @type t ::
-          {:text, ACP.TextContent.t()}
-          | {:image, ACP.ImageContent.t()}
-          | {:audio, ACP.AudioContent.t()}
-          | {:resource_link, ACP.ResourceLink.t()}
-          | {:resource, ACP.EmbeddedResource.t()}
+          {:text, ACP.V1.TextContent.t()}
+          | {:image, ACP.V1.ImageContent.t()}
+          | {:audio, ACP.V1.AudioContent.t()}
+          | {:resource_link, ACP.V1.ResourceLink.t()}
+          | {:resource, ACP.V1.EmbeddedResource.t()}
 
   def text(text_content), do: {:text, text_content}
   def image(image_content), do: {:image, image_content}
@@ -384,39 +384,40 @@ defmodule ACP.ContentBlock do
   def resource(er), do: {:resource, er}
 
   @doc "Convenience: create a text content block from a string."
-  def from_string(text), do: {:text, ACP.TextContent.new(text)}
+  def from_string(text), do: {:text, ACP.V1.TextContent.new(text)}
 
-  def to_json({:text, tc}), do: Map.put(ACP.TextContent.to_json(tc), "type", "text")
-  def to_json({:image, ic}), do: Map.put(ACP.ImageContent.to_json(ic), "type", "image")
-  def to_json({:audio, ac}), do: Map.put(ACP.AudioContent.to_json(ac), "type", "audio")
+  def to_json({:text, tc}), do: Map.put(ACP.V1.TextContent.to_json(tc), "type", "text")
+  def to_json({:image, ic}), do: Map.put(ACP.V1.ImageContent.to_json(ic), "type", "image")
+  def to_json({:audio, ac}), do: Map.put(ACP.V1.AudioContent.to_json(ac), "type", "audio")
 
   def to_json({:resource_link, rl}),
-    do: Map.put(ACP.ResourceLink.to_json(rl), "type", "resource_link")
+    do: Map.put(ACP.V1.ResourceLink.to_json(rl), "type", "resource_link")
 
-  def to_json({:resource, er}), do: Map.put(ACP.EmbeddedResource.to_json(er), "type", "resource")
+  def to_json({:resource, er}),
+    do: Map.put(ACP.V1.EmbeddedResource.to_json(er), "type", "resource")
 
   def from_json(%{"type" => "text"} = map) do
-    {:ok, tc} = ACP.TextContent.from_json(Map.delete(map, "type"))
+    {:ok, tc} = ACP.V1.TextContent.from_json(Map.delete(map, "type"))
     {:ok, {:text, tc}}
   end
 
   def from_json(%{"type" => "image"} = map) do
-    {:ok, ic} = ACP.ImageContent.from_json(Map.delete(map, "type"))
+    {:ok, ic} = ACP.V1.ImageContent.from_json(Map.delete(map, "type"))
     {:ok, {:image, ic}}
   end
 
   def from_json(%{"type" => "audio"} = map) do
-    {:ok, ac} = ACP.AudioContent.from_json(Map.delete(map, "type"))
+    {:ok, ac} = ACP.V1.AudioContent.from_json(Map.delete(map, "type"))
     {:ok, {:audio, ac}}
   end
 
   def from_json(%{"type" => "resource_link"} = map) do
-    {:ok, rl} = ACP.ResourceLink.from_json(Map.delete(map, "type"))
+    {:ok, rl} = ACP.V1.ResourceLink.from_json(Map.delete(map, "type"))
     {:ok, {:resource_link, rl}}
   end
 
   def from_json(%{"type" => "resource"} = map) do
-    {:ok, er} = ACP.EmbeddedResource.from_json(Map.delete(map, "type"))
+    {:ok, er} = ACP.V1.EmbeddedResource.from_json(Map.delete(map, "type"))
     {:ok, {:resource, er}}
   end
 end

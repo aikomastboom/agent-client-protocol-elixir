@@ -1,4 +1,4 @@
-defmodule ACP.MethodNames do
+defmodule ACP.V1.MethodNames do
   @moduledoc "JSON-RPC method names for all ACP methods."
 
   # Agent methods (called by clients, handled by agents)

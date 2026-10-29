@@ -1,4 +1,4 @@
-defmodule ACP.Side do
+defmodule ACP.V1.Side do
   @moduledoc """
   Side behaviour for decoding JSON-RPC messages into typed structs.
 
@@ -12,14 +12,14 @@ defmodule ACP.Side do
               {:ok, any()} | {:error, ACP.Error.t()}
 end
 
-defmodule ACP.ClientSide do
+defmodule ACP.V1.ClientSide do
   @moduledoc """
   Client side of an ACP connection.
 
   Decodes incoming requests (from agent) and notifications (from agent).
   """
 
-  @behaviour ACP.Side
+  @behaviour ACP.V1.Side
 
   @impl true
   def decode_request(_method, nil), do: {:error, ACP.Error.invalid_params()}
@@ -27,31 +27,31 @@ defmodule ACP.ClientSide do
   def decode_request(method, params) do
     case method do
       "session/request_permission" ->
-        ACP.RequestPermissionRequest.from_json(params) |> wrap(:request_permission)
+        ACP.V1.RequestPermissionRequest.from_json(params) |> wrap(:request_permission)
 
       "elicitation/create" ->
-        ACP.ElicitationCreateRequest.from_json(params) |> wrap(:elicitation_create)
+        ACP.V1.ElicitationCreateRequest.from_json(params) |> wrap(:elicitation_create)
 
       "fs/write_text_file" ->
-        ACP.WriteTextFileRequest.from_json(params) |> wrap(:write_text_file)
+        ACP.V1.WriteTextFileRequest.from_json(params) |> wrap(:write_text_file)
 
       "fs/read_text_file" ->
-        ACP.ReadTextFileRequest.from_json(params) |> wrap(:read_text_file)
+        ACP.V1.ReadTextFileRequest.from_json(params) |> wrap(:read_text_file)
 
       "terminal/create" ->
-        ACP.CreateTerminalRequest.from_json(params) |> wrap(:create_terminal)
+        ACP.V1.CreateTerminalRequest.from_json(params) |> wrap(:create_terminal)
 
       "terminal/output" ->
-        ACP.TerminalOutputRequest.from_json(params) |> wrap(:terminal_output)
+        ACP.V1.TerminalOutputRequest.from_json(params) |> wrap(:terminal_output)
 
       "terminal/kill" ->
-        ACP.KillTerminalCommandRequest.from_json(params) |> wrap(:kill_terminal_command)
+        ACP.V1.KillTerminalCommandRequest.from_json(params) |> wrap(:kill_terminal_command)
 
       "terminal/release" ->
-        ACP.ReleaseTerminalRequest.from_json(params) |> wrap(:release_terminal)
+        ACP.V1.ReleaseTerminalRequest.from_json(params) |> wrap(:release_terminal)
 
       "terminal/wait_for_exit" ->
-        ACP.WaitForTerminalExitRequest.from_json(params) |> wrap(:wait_for_terminal_exit)
+        ACP.V1.WaitForTerminalExitRequest.from_json(params) |> wrap(:wait_for_terminal_exit)
 
       "_" <> custom_method ->
         {:ok, {:ext_method, %ACP.ExtRequest{method: custom_method, params: params}}}
@@ -67,7 +67,7 @@ defmodule ACP.ClientSide do
   def decode_notification(method, params) do
     case method do
       "session/update" ->
-        {:ok, notif} = ACP.SessionNotification.from_json(params)
+        {:ok, notif} = ACP.V1.SessionNotification.from_json(params)
         {:ok, {:session_notification, notif}}
 
       "_" <> custom_method ->
@@ -81,14 +81,14 @@ defmodule ACP.ClientSide do
   defp wrap({:ok, val}, tag), do: {:ok, {tag, val}}
 end
 
-defmodule ACP.AgentSide do
+defmodule ACP.V1.AgentSide do
   @moduledoc """
   Agent side of an ACP connection.
 
   Decodes incoming requests (from client) and notifications (from client).
   """
 
-  @behaviour ACP.Side
+  @behaviour ACP.V1.Side
 
   @impl true
   def decode_request(_method, nil),
@@ -98,40 +98,41 @@ defmodule ACP.AgentSide do
     with :ok <- validate_required_fields(method, params) do
       case method do
         "initialize" ->
-          ACP.InitializeRequest.from_json(params) |> wrap(:initialize)
+          ACP.V1.InitializeRequest.from_json(params) |> wrap(:initialize)
 
         "authenticate" ->
-          ACP.AuthenticateRequest.from_json(params) |> wrap(:authenticate)
+          ACP.V1.AuthenticateRequest.from_json(params) |> wrap(:authenticate)
 
         "session/new" ->
-          ACP.NewSessionRequest.from_json(params) |> wrap(:new_session)
+          ACP.V1.NewSessionRequest.from_json(params) |> wrap(:new_session)
 
         "session/load" ->
-          ACP.LoadSessionRequest.from_json(params) |> wrap(:load_session)
+          ACP.V1.LoadSessionRequest.from_json(params) |> wrap(:load_session)
 
         "session/set_mode" ->
-          ACP.SetSessionModeRequest.from_json(params) |> wrap(:set_session_mode)
+          ACP.V1.SetSessionModeRequest.from_json(params) |> wrap(:set_session_mode)
 
         "session/prompt" ->
-          ACP.PromptRequest.from_json(params) |> wrap(:prompt)
+          ACP.V1.PromptRequest.from_json(params) |> wrap(:prompt)
 
         "session/list" ->
-          ACP.ListSessionsRequest.from_json(params) |> wrap(:list_sessions)
+          ACP.V1.ListSessionsRequest.from_json(params) |> wrap(:list_sessions)
 
         "session/fork" ->
-          ACP.ForkSessionRequest.from_json(params) |> wrap(:fork_session)
+          ACP.V1.ForkSessionRequest.from_json(params) |> wrap(:fork_session)
 
         "session/resume" ->
-          ACP.ResumeSessionRequest.from_json(params) |> wrap(:resume_session)
+          ACP.V1.ResumeSessionRequest.from_json(params) |> wrap(:resume_session)
 
         "session/set_config_option" ->
-          ACP.SetSessionConfigOptionRequest.from_json(params) |> wrap(:set_session_config_option)
+          ACP.V1.SetSessionConfigOptionRequest.from_json(params)
+          |> wrap(:set_session_config_option)
 
         "session/set_model" ->
-          ACP.SetSessionModelRequest.from_json(params) |> wrap(:set_session_model)
+          ACP.V1.SetSessionModelRequest.from_json(params) |> wrap(:set_session_model)
 
         "session/close" ->
-          ACP.CloseSessionRequest.from_json(params) |> wrap(:close)
+          ACP.V1.CloseSessionRequest.from_json(params) |> wrap(:close)
 
         "_" <> custom_method ->
           {:ok, {:ext_method, %ACP.ExtRequest{method: custom_method, params: params}}}
@@ -150,7 +151,7 @@ defmodule ACP.AgentSide do
     with :ok <- validate_required_fields(method, params) do
       case method do
         "session/cancel" ->
-          ACP.CancelNotification.from_json(params) |> wrap(:cancel)
+          ACP.V1.CancelNotification.from_json(params) |> wrap(:cancel)
 
         "_" <> custom_method ->
           {:ok, {:ext_notification, %ACP.ExtNotification{method: custom_method, params: params}}}
