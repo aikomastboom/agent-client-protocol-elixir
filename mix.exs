@@ -1,7 +1,7 @@
 defmodule ACP.MixProject do
   use Mix.Project
 
-  @version "0.2.0"
+  @version "0.3.0"
   @source_url "https://github.com/f1729/agent-client-protocol-elixir"
 
   def project do
@@ -43,7 +43,7 @@ defmodule ACP.MixProject do
       name: "agent_client_protocol",
       licenses: ["MIT"],
       links: %{"GitHub" => @source_url},
-      files: ~w(lib mix.exs README.md LICENSE)
+      files: ~w(lib priv mix.exs README.md LICENSE)
     ]
   end
 end

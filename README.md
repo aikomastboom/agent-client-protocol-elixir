@@ -11,7 +11,7 @@ Add `agent_client_protocol` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:agent_client_protocol, "~> 0.2.0"}
+    {:agent_client_protocol, "~> 0.3.0"}
   ]
 end
 ```
@@ -19,6 +19,8 @@ end
 ## Protocol versions
 
 This library currently implements **ACP v1**. Protocol-version-specific modules live under the `ACP.V1.*` namespace; the bare `ACP.*` namespace is reserved for version-agnostic shared infrastructure (`Connection`, `Error`, `MaybeUndefined`, `ProtocolVersion`, `RPC`, `StreamBroadcast`, `Ext*`, `MessageHandler`, `JSONHelpers`). v2 support is landing incrementally - see `CHANGELOG.md`.
+
+The canonical ACP v2 JSON Schema is vendored under `priv/schema/v2/`, pinned to a specific upstream commit (see `priv/schema/v2/SOURCE.md`). `ACP.ProtocolVersion.v2/0` exists so v2 can be named, but `latest/0` still returns v1: connections do not negotiate v2 yet.
 
 ## Overview
 
@@ -121,6 +123,31 @@ json = ACP.V1.SessionUpdate.to_json(update)
 request = %ACP.RPC.Request{id: 1, method: "initialize", params: %{"protocolVersion" => 1}}
 encoded = ACP.RPC.JsonRpcMessage.encode!(request)
 ```
+
+### Patch Semantics
+
+`ACP.MaybeUndefined` models a field that is omitted, explicitly `null`, or present. v2
+upserts apply those three states as patches:
+
+```elixir
+# Whole-replace field: omit leaves it alone, null clears it, a value replaces it
+ACP.MaybeUndefined.update_to(:undefined, "existing")  #=> "existing"
+ACP.MaybeUndefined.update_to(nil, "existing")         #=> nil
+ACP.MaybeUndefined.update_to({:value, "new"}, "x")    #=> "new"
+
+# _meta metadata patch: one top-level key at a time, never nested merges
+ACP.MaybeUndefined.patch_map(:undefined, %{"a" => 1})            #=> %{"a" => 1}
+ACP.MaybeUndefined.patch_map(nil, %{"a" => 1})                   #=> nil
+ACP.MaybeUndefined.patch_map({:value, %{"a" => nil}}, %{"a" => 1}) #=> nil
+
+# Chunks accumulate instead of replacing
+ACP.MaybeUndefined.append_to({:value, ["b"]}, ["a"]) #=> ["a", "b"]
+
+# A malformed optional field decodes as omitted, so it cannot clobber stored data
+ACP.MaybeUndefined.from_json("nope", &is_map/1) #=> :undefined
+```
+
+See `priv/schema/v2/SOURCE.md` for the vendored v2 schema this was written against.
 
 ## Protocol Compatibility
 
