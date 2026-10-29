@@ -19,7 +19,12 @@ defmodule ACP.Connection do
     :pending_responses,
     :request_handlers,
     :next_id,
-    :subscribers
+    :subscribers,
+    # Protocol version selected by the peer's `initialize`, and the versions this
+    # side is willing to serve. `protocol_version` stays `nil` until a successful
+    # `initialize`, so a connection that never negotiates behaves as v1.
+    :protocol_version,
+    :supported_versions
   ]
 
   @type t :: %__MODULE__{}
@@ -30,12 +35,15 @@ defmodule ACP.Connection do
   Start a connection GenServer.
 
   Options:
-    - `:side` - The side module (ACP.V1.ClientSide or ACP.V1.AgentSide)
+    - `:side` - The side module (ACP.V1.ClientSide or ACP.V1.AgentSide). The
+      negotiated protocol version selects the matching v2 decoder automatically.
     - `:handler` - Module implementing ACP.MessageHandler
     - `:handler_state` - State passed to handler callbacks
     - `:input` - Input IO device or port (default: :stdio)
     - `:output` - Output IO device (default: :stdio)
     - `:name` - Optional GenServer name
+    - `:supported_versions` - Protocol versions to offer during negotiation
+      (default: `[1]`; pass `[1, 2]` to accept v2 `initialize`)
   """
   def start_link(opts) do
     name = Keyword.get(opts, :name)
@@ -85,7 +93,11 @@ defmodule ACP.Connection do
       pending_responses: %{},
       request_handlers: %{},
       next_id: 0,
-      subscribers: []
+      subscribers: [],
+      # v1 by default: v2 methods are implemented in later phases, so
+      # advertising v2 here would promise a surface this library cannot yet
+      # serve. Callers opt in with `:supported_versions`.
+      supported_versions: Keyword.get(opts, :supported_versions, [ACP.ProtocolVersion.v1()])
     }
 
     # Start reading input in a separate process
@@ -237,10 +249,45 @@ defmodule ACP.Connection do
     end
   end
 
-  defp handle_incoming_request(%{"id" => id, "method" => method} = msg, state) do
+  defp handle_incoming_request(%{"method" => "initialize", "id" => id} = msg, state) do
+    # `initialize` is read version-first, before any other parameter: the spec
+    # makes this side select a protocol version, then decode the rest of the
+    # exchange with that version's modules.
     params = Map.get(msg, "params")
 
-    case state.side_module.decode_request(method, params) do
+    case ACP.V2.Negotiation.select(params, state.supported_versions) do
+      {:ok, version} ->
+        state = %{state | protocol_version: version}
+        decode_and_dispatch(msg, state, side_module_for(state, version))
+
+      {:error, error} ->
+        # Nothing is remembered: a peer that asked for a version we cannot serve
+        # may retry with one we can.
+        Logger.warning(
+          "[ACP.Connection] initialize rejected: no supported protocol version in #{inspect(state.supported_versions)} for request #{inspect(Map.get(params, "protocolVersion"))}"
+        )
+
+        error_response = %{"id" => id, "error" => ACP.Error.to_json(error)}
+        send_json(state.output_io, error_response)
+        broadcast(state, {:outgoing, :response, id, {:error, error}})
+        state
+    end
+  end
+
+  defp handle_incoming_request(msg, state) do
+    # Post-negotiation traffic uses the negotiated version's decoder; a
+    # connection whose peer never negotiated is treated as v1.
+    decode_and_dispatch(
+      msg,
+      state,
+      side_module_for(state, state.protocol_version || ACP.ProtocolVersion.v1())
+    )
+  end
+
+  defp decode_and_dispatch(%{"id" => id, "method" => method} = msg, state, side_module) do
+    params = Map.get(msg, "params")
+
+    case side_module.decode_request(method, params) do
       {:ok, decoded_request} ->
         broadcast(state, {:incoming, :request, id, method, decoded_request})
 
@@ -347,6 +394,21 @@ defmodule ACP.Connection do
       device -> IO.binwrite(device, line)
     end
   end
+
+  # The version-specific side module is derived from the configured v1/v2 side,
+  # so callers only ever pass `ACP.V1.AgentSide` / `ACP.V1.ClientSide` and the
+  # negotiated version decides the decoder.
+  defp side_module_for(state, version) do
+    cond do
+      version == ACP.ProtocolVersion.v1() -> state.side_module
+      version == ACP.ProtocolVersion.v2() -> v2_side(state.side_module)
+      true -> state.side_module
+    end
+  end
+
+  defp v2_side(ACP.V1.AgentSide), do: ACP.V2.AgentSide
+  defp v2_side(ACP.V1.ClientSide), do: ACP.V2.ClientSide
+  defp v2_side(other), do: other
 
   defp encode_response_value(value) when is_map(value) do
     if Map.has_key?(value, :__struct__) do

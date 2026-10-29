@@ -20,6 +20,7 @@ defmodule ACP.Error do
   def internal_error_code, do: -32603
   def auth_required_code, do: -32000
   def resource_not_found_code, do: -32002
+  def unsupported_protocol_version_code, do: -32_022
 
   # Convenience constructors
   def parse_error, do: %__MODULE__{code: -32700, message: "Parse error"}
@@ -34,6 +35,18 @@ defmodule ACP.Error do
     if uri, do: %{err | data: %{"uri" => uri}}, else: err
   end
 
+  @doc """
+  `-32022`: no protocol version this side supports is at or below the requested
+  one. `data` carries the spec-required `requested` and `supported` fields.
+  """
+  def unsupported_protocol_version(requested, supported) do
+    %__MODULE__{
+      code: -32_022,
+      message: "Unsupported protocol version",
+      data: %{"requested" => requested, "supported" => Enum.sort(supported)}
+    }
+  end
+
   def new(code, message), do: %__MODULE__{code: code, message: message}
 
   def with_data(%__MODULE__{} = err, data), do: %{err | data: data}
@@ -46,6 +59,7 @@ defmodule ACP.Error do
   def code_name(-32603), do: :internal_error
   def code_name(-32000), do: :auth_required
   def code_name(-32002), do: :resource_not_found
+  def code_name(-32_022), do: :unsupported_protocol_version
   def code_name(code) when is_integer(code), do: {:other, code}
 
   def to_json(%__MODULE__{} = err) do

@@ -15,10 +15,26 @@ defmodule ACP.ProtocolVersion do
   @v2 2
   @latest @v1
 
+  # uint16 bounds from the v2 schema's ProtocolVersion definition.
+  @min 0
+  @max 65_535
+
   def v0, do: @v0
   def v1, do: @v1
   def v2, do: @v2
   def latest, do: @latest
+
+  @doc "Protocol versions this library can speak, ascending."
+  def supported, do: [@v1, @v2]
+
+  @doc """
+  Whether a raw JSON value is a well-formed protocol version.
+
+  Checks only the wire shape (an integer inside the schema's uint16 range), not
+  whether the version is implemented. Use `ACP.V2.Negotiation` for support.
+  """
+  def valid?(value) when is_integer(value) and value >= @min and value <= @max, do: true
+  def valid?(_value), do: false
 
   @doc "Deserialize from JSON value. Integers pass through, strings become v0."
   def from_json(value) when is_integer(value) and value >= 0, do: {:ok, value}
